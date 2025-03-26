@@ -1,0 +1,737 @@
+[
+  {
+    "Code": "403-forbidden",
+    "Id": "403 - Akses ditolak\u003Cbr\u003Esilahkan hubungi Administrator",
+    "En": "403 - Forbidden\u003Cbr\u003EPlease Contact Your Administrator"
+  },
+  {
+    "Code": "404-not-found",
+    "Id": "OPPS, HALAMAN TIDAK DITEMUKAN",
+    "En": "OPPS, PAGE NOT FOUND"
+  },
+  {
+    "Code": "404-txt",
+    "Id": "Ini akan sama mudahnya dengan bahasa Occidental; \u003C/br\u003Efaktanya, ini akan sama seperti /r/nbahasa Occidental bagi penutur bahasa Inggris.",
+    "En": "It will be as straightforward as Occidental;\u003C/br\u003E in fact, it will be just like /r/nOccidental to an English speaker."
+  },
+  {
+    "Code": "active",
+    "Id": "Aktif",
+    "En": "Active"
+  },
+  {
+    "Code": "active-directory",
+    "Id": "Active Directory",
+    "En": "Active Directory"
+  },
+  {
+    "Code": "ad-user",
+    "Id": "Pengguna AD",
+    "En": "AD User"
+  },
+  {
+    "Code": "add-new-data",
+    "Id": "Tambah Data Baru",
+    "En": "Add New Data"
+  },
+  {
+    "Code": "add-new-user",
+    "Id": "Tambah Baru Pengguna",
+    "En": "Add New User"
+  },
+  {
+    "Code": "address",
+    "Id": "Alamat",
+    "En": "Address"
+  },
+  {
+    "Code": "after",
+    "Id": "Sesudah",
+    "En": "After"
+  },
+  {
+    "Code": "api-key",
+    "Id": "API Key tidak valid",
+    "En": "Invalid API Key"
+  },
+  {
+    "Code": "before",
+    "Id": "Sebelum",
+    "En": "Before"
+  },
+  {
+    "Code": "btn-add",
+    "Id": "Tambah Baru",
+    "En": "Add New"
+  },
+  {
+    "Code": "btn-back-to-list",
+    "Id": "Kembali ke List",
+    "En": "Back to List"
+  },
+  {
+    "Code": "btn-delete",
+    "Id": "hapus",
+    "En": "delete"
+  },
+  {
+    "Code": "btn-delete-yes",
+    "Id": "Iya, Hapus!",
+    "En": "Yes, Delete It!"
+  },
+  {
+    "Code": "btn-detail",
+    "Id": "detil",
+    "En": "detail"
+  },
+  {
+    "Code": "btn-downlad",
+    "Id": "Unduh",
+    "En": "Download"
+  },
+  {
+    "Code": "btn-edit",
+    "Id": "perbarui",
+    "En": "edit"
+  },
+  {
+    "Code": "btn-prev",
+    "Id": "Pratinjau",
+    "En": "Prev"
+  },
+  {
+    "Code": "btn-reset-link",
+    "Id": "Kirim Tautan",
+    "En": "Send Reset Link"
+  },
+  {
+    "Code": "btn-toggle",
+    "Id": "Alihkan Semua",
+    "En": "Toggle All"
+  },
+  {
+    "Code": "btn-upload",
+    "Id": "Unggah",
+    "En": "Upload"
+  },
+  {
+    "Code": "btn-visible",
+    "Id": "tampilkan kolom",
+    "En": "visible column"
+  },
+  {
+    "Code": "cancel",
+    "Id": "Batal",
+    "En": "Cancel"
+  },
+  {
+    "Code": "change-pswd",
+    "Id": "Ganti Kata Sandi",
+    "En": "Change Password"
+  },
+  {
+    "Code": "check-all",
+    "Id": "Centang Semua",
+    "En": "Check All"
+  },
+  {
+    "Code": "code",
+    "Id": "Kode",
+    "En": "Code"
+  },
+  {
+    "Code": "command",
+    "Id": "Perintah",
+    "En": "Command"
+  },
+  {
+    "Code": "company",
+    "Id": "Perusahaan",
+    "En": "Company Name"
+  },
+  {
+    "Code": "company-name",
+    "Id": "Nama Perusahaan",
+    "En": "Company Name"
+  },
+  {
+    "Code": "confrim-new-pswd",
+    "Id": "Konfirmasi Kata Sandi Baru",
+    "En": "Confrim New Password"
+  },
+  {
+    "Code": "date",
+    "Id": "Tanggal",
+    "En": "Date"
+  },
+  {
+    "Code": "date-expired",
+    "Id": "Tanggal sudah kadaluarsa",
+    "En": "Date expired"
+  },
+  {
+    "Code": "delete",
+    "Id": "Hapus",
+    "En": "Delete"
+  },
+  {
+    "Code": "description",
+    "Id": "Deskripsi",
+    "En": "Description"
+  },
+  {
+    "Code": "drag-drop-file",
+    "Id": "Seret dan jatuhkan file Anda atau telusuri file Anda.",
+    "En": "Drag and drop your files or browse your files."
+  },
+  {
+    "Code": "duplicate",
+    "Id": "Anda memasukkan duplikasi dataa. Masukkan data yang berbeda",
+    "En": "The data you provide has been set. Enter another one"
+  },
+  {
+    "Code": "edit-user",
+    "Id": "Perbarui Pengguna",
+    "En": "Edit User"
+  },
+  {
+    "Code": "email-address",
+    "Id": "Alamat Email",
+    "En": "Email Address"
+  },
+  {
+    "Code": "email-expired",
+    "Id": "Kode verifikasi email Anda tidak berlaku. Hubungi Administrator",
+    "En": "Your email verfication has expired. Contact your Administrator"
+  },
+  {
+    "Code": "email-invalid",
+    "Id": "Email yang Anda masukkan tidak valid",
+    "En": "Invalid email"
+  },
+  {
+    "Code": "email-unverified",
+    "Id": "Email belum terverifikasi",
+    "En": "Email is not verified"
+  },
+  {
+    "Code": "email-verified",
+    "Id": "Email sudah diverifikasi",
+    "En": "Email has been verified"
+  },
+  {
+    "Code": "english",
+    "Id": "Bahasa Inggris",
+    "En": "English"
+  },
+  {
+    "Code": "filter",
+    "Id": "Saring",
+    "En": "Filter"
+  },
+  {
+    "Code": "forgot-password",
+    "Id": "Lupa Kata Sandi",
+    "En": "Forgot Password"
+  },
+  {
+    "Code": "icon",
+    "Id": "Ikon",
+    "En": "Icon"
+  },
+  {
+    "Code": "input-empty",
+    "Id": "Semua field mandatory harus terisi",
+    "En": "One or more fields are required"
+  },
+  {
+    "Code": "input-invalid",
+    "Id": "Input yang Anda masukkan salah",
+    "En": "You have entered an invalid value"
+  },
+  {
+    "Code": "input-invalid-code",
+    "Id": "Kode yang Anda masukkan salah",
+    "En": "You have entered an invalid code"
+  },
+  {
+    "Code": "input-invalid-daterange",
+    "Id": "Rentang tanggal yang Anda masukkan tidak sesuai",
+    "En": "You have entered an invalid date range"
+  },
+  {
+    "Code": "input-invalid-format",
+    "Id": "Format yang Anda masukkan salah",
+    "En": "You have entered an invalid format"
+  },
+  {
+    "Code": "input-invalid-type",
+    "Id": "Tipe data yang Anda masukkan salah",
+    "En": "You have entered an invalid type"
+  },
+  {
+    "Code": "insert",
+    "Id": "Menambah",
+    "En": "Insert"
+  },
+  {
+    "Code": "insert-at",
+    "Id": "Dibuat Pada",
+    "En": "Inserted At"
+  },
+  {
+    "Code": "insert-by",
+    "Id": "Dibuat Oleh",
+    "En": "Inserted By"
+  },
+  {
+    "Code": "insert-value",
+    "Id": "masukan nilai",
+    "En": "insert value"
+  },
+  {
+    "Code": "ip-address",
+    "Id": "Alamat IP",
+    "En": "IP Address"
+  },
+  {
+    "Code": "is-child-company",
+    "Id": "Apakah Anak Perusahaan?",
+    "En": "Is Child Company?"
+  },
+  {
+    "Code": "lang-approve",
+    "Id": "Setuju",
+    "En": "Approve"
+  },
+  {
+    "Code": "lang-back",
+    "Id": "Kembali",
+    "En": "Back"
+  },
+  {
+    "Code": "lang-cancel",
+    "Id": "Batal",
+    "En": "Cancel"
+  },
+  {
+    "Code": "lang-send",
+    "Id": "Kirim",
+    "En": "Send"
+  },
+  {
+    "Code": "lbl-company-list",
+    "Id": "Daftar Perusahaan",
+    "En": "Company List"
+  },
+  {
+    "Code": "lbl-delete-confirm",
+    "Id": "Apakah Anda yakin ingin menghapus baris ini?",
+    "En": "Are you certain you want to delete this record?"
+  },
+  {
+    "Code": "lbl-delete-sure",
+    "Id": "Apa anda yakin?",
+    "En": "Are you sure?"
+  },
+  {
+    "Code": "lbl-is-ad-user",
+    "Id": "Apakah Pengguna AD",
+    "En": "Is AD user"
+  },
+  {
+    "Code": "lbl-lang-mn-list",
+    "Id": "Daftar Bahas Menu",
+    "En": "Language Menu List"
+  },
+  {
+    "Code": "lbl-lang-msg-list",
+    "Id": "Daftar Bahas Pesan",
+    "En": "Language Message List"
+  },
+  {
+    "Code": "lbl-list",
+    "Id": "Daftar Pengguna",
+    "En": "User List"
+  },
+  {
+    "Code": "lbl-log-audit-list",
+    "Id": "Daftar Log Audit",
+    "En": "Log Audit List"
+  },
+  {
+    "Code": "lbl-log-list",
+    "Id": "Daftar Log Transaksi",
+    "En": "Log Transaction List"
+  },
+  {
+    "Code": "lbl-menu-list",
+    "Id": "Daftar Menu",
+    "En": "Menu List"
+  },
+  {
+    "Code": "lbl-menu-priv",
+    "Id": "Hak Akses Menu",
+    "En": "Menu Privilege"
+  },
+  {
+    "Code": "lbl-not-found-1",
+    "Id": "Maaf! Tidak ada hasil ditemukan",
+    "En": "Sorry! No Result Found"
+  },
+  {
+    "Code": "lbl-not-found-2",
+    "Id": "Kami tidak menemukan data apa pun untuk pencarian Anda.",
+    "En": "We did not find any data for you search."
+  },
+  {
+    "Code": "lbl-role-list",
+    "Id": "Daftar Peran",
+    "En": "Role List"
+  },
+  {
+    "Code": "lbl-role-priv-list",
+    "Id": "Daftar Hak Akses Peran",
+    "En": "Role Privilege List"
+  },
+  {
+    "Code": "lbl-set-app",
+    "Id": "Pengaturan Aplikasi",
+    "En": "Setting Application"
+  },
+  {
+    "Code": "lbl-user-priv-list",
+    "Id": "Daftar Hak Akses Pengguna",
+    "En": "User Privilege List"
+  },
+  {
+    "Code": "level",
+    "Id": "Tingkat",
+    "En": "Level"
+  },
+  {
+    "Code": "login-exeeded",
+    "Id": "Anda sudah melakukan kesalahan login melebihi batas maksimal. Hubungi Andmistrator",
+    "En": "Your login attempt exeeded. Please, contact your Administrator"
+  },
+  {
+    "Code": "login-invalid",
+    "Id": "Login gagal. Username atau password yang Anda masukkan salah",
+    "En": "Login failed. You\u0027ve\u0027 entered invalid username or password"
+  },
+  {
+    "Code": "message-sent",
+    "Id": "Pesan telah terkirim",
+    "En": "Your message was sent"
+  },
+  {
+    "Code": "message-unsent",
+    "Id": "Pesan gagal terkirim",
+    "En": "Your message was not sent"
+  },
+  {
+    "Code": "name",
+    "Id": "Nama",
+    "En": "Name"
+  },
+  {
+    "Code": "new-pswd",
+    "Id": "Kata Sandi Baru",
+    "En": "New Password"
+  },
+  {
+    "Code": "next",
+    "Id": "Lanjut",
+    "En": "Next"
+  },
+  {
+    "Code": "not-found",
+    "Id": "Data yang Anda cari tidak ditemukan",
+    "En": "The record you are looking for was not found"
+  },
+  {
+    "Code": "of",
+    "Id": "dari",
+    "En": "of"
+  },
+  {
+    "Code": "old-pswd",
+    "Id": "Kata Sandi Lama",
+    "En": "Old Password"
+  },
+  {
+    "Code": "other-company",
+    "Id": "Perusahaan Lainnya",
+    "En": "Other Company"
+  },
+  {
+    "Code": "parameter",
+    "Id": "Parameter",
+    "En": "Parameter"
+  },
+  {
+    "Code": "parent-company",
+    "Id": "Induk Perusahaan",
+    "En": "Parent Company"
+  },
+  {
+    "Code": "parent-menu",
+    "Id": "Induk Menu",
+    "En": "Parent Menu"
+  },
+  {
+    "Code": "pass-invalid",
+    "Id": "User ID atau password yang Anda masukkan salah",
+    "En": "Invalid User ID or password"
+  },
+  {
+    "Code": "pass-length",
+    "Id": "Jumlah karater password tidak memenuhi kriteria",
+    "En": "Your password does not match max or min characters"
+  },
+  {
+    "Code": "pass-number",
+    "Id": "Password harus terdiri setidaknya dua angka",
+    "En": "Your password should contains at least two numbers"
+  },
+  {
+    "Code": "pass-repetitive",
+    "Id": "Password mengandung pengulangan karakter",
+    "En": "Your password contains too many repetitive characters"
+  },
+  {
+    "Code": "pass-upper-case",
+    "Id": "Password harus terdiri setidaknya dua huruf kapital",
+    "En": "Your password should contains at least two upper characters"
+  },
+  {
+    "Code": "password",
+    "Id": "Kata Sandi",
+    "En": "Password"
+  },
+  {
+    "Code": "path",
+    "Id": "Path",
+    "En": "Path"
+  },
+  {
+    "Code": "phone-number",
+    "Id": "Nomor Telepon",
+    "En": "Phone Number"
+  },
+  {
+    "Code": "process-failed",
+    "Id": "Gagal",
+    "En": "Failed"
+  },
+  {
+    "Code": "process-success",
+    "Id": "Berhasil",
+    "En": "Successfull"
+  },
+  {
+    "Code": "profile",
+    "Id": "Profil",
+    "En": "Profile"
+  },
+  {
+    "Code": "read",
+    "Id": "Lihat",
+    "En": "Read"
+  },
+  {
+    "Code": "reset",
+    "Id": "Mengatur Ulang",
+    "En": "Reset"
+  },
+  {
+    "Code": "reset-password",
+    "Id": "Mengatur Ulang Kata Sandi",
+    "En": "Reset Password"
+  },
+  {
+    "Code": "results",
+    "Id": "Hasil",
+    "En": "Results"
+  },
+  {
+    "Code": "role",
+    "Id": "Peran",
+    "En": "Role"
+  },
+  {
+    "Code": "role-name",
+    "Id": "Nama Peran",
+    "En": "Role Name"
+  },
+  {
+    "Code": "save",
+    "Id": "Simpan",
+    "En": "Save"
+  },
+  {
+    "Code": "search-for",
+    "Id": "Cari untuk",
+    "En": "Search for"
+  },
+  {
+    "Code": "select",
+    "Id": "pilih",
+    "En": "select"
+  },
+  {
+    "Code": "sequence",
+    "Id": "Ururtan",
+    "En": "Sequence"
+  },
+  {
+    "Code": "show-card-filter",
+    "Id": "tampilkan penyaringan data",
+    "En": "show card filter"
+  },
+  {
+    "Code": "showing",
+    "Id": "Menampilkan",
+    "En": "Showing"
+  },
+  {
+    "Code": "sign-in",
+    "Id": "Masuk",
+    "En": "Sign in"
+  },
+  {
+    "Code": "sign-out",
+    "Id": "Keluar",
+    "En": "Sign out"
+  },
+  {
+    "Code": "table-name",
+    "Id": "Nama Tabel",
+    "En": "Table Name"
+  },
+  {
+    "Code": "text-403",
+    "Id": "Anda tidak memiliki izin untuk mengakses menu ini",
+    "En": "You do not have permission to access on this menu"
+  },
+  {
+    "Code": "thead-action",
+    "Id": "Aksi",
+    "En": "Action"
+  },
+  {
+    "Code": "thead-email-verified",
+    "Id": "Verifikasi Email",
+    "En": "Email Verified"
+  },
+  {
+    "Code": "trans-log-id",
+    "Id": "Log Transaksi ID",
+    "En": "Transaction Log ID"
+  },
+  {
+    "Code": "txt-file-type",
+    "Id": "Berkas wajib bertipe .xls, .xlsx",
+    "En": "Files must be of type .xls, .xlsx"
+  },
+  {
+    "Code": "txt-forgot-pswd-1",
+    "Id": "Berikan alamat email Anda, dan tautan akan dikirimkan kepada Anda.",
+    "En": "Provide your email address, and a link will be sent to you."
+  },
+  {
+    "Code": "txt-forgot-pswd-2",
+    "Id": "Tautan telah berhasil dikirim, silakan periksa email Anda.",
+    "En": "The link has been sent successfully, please check your email."
+  },
+  {
+    "Code": "txt-forgot-pswd-3",
+    "Id": "Tunggu, aku ingat kata sandiku",
+    "En": "Wait, I remember my password"
+  },
+  {
+    "Code": "txt-login-1",
+    "Id": "Selamat Datang Kembali !",
+    "En": "Welcome Back !"
+  },
+  {
+    "Code": "txt-login-2",
+    "Id": "Masuk untuk melanjutkan ke aplikasi",
+    "En": "Sign in to continue to application."
+  },
+  {
+    "Code": "txt-login-3",
+    "Id": "Anda berhasil masuk.",
+    "En": "You have successfully signed in."
+  },
+  {
+    "Code": "txt-success-reset-pswd",
+    "Id": "kata sandi Anda telah berhasil diubah, silakan",
+    "En": "Your password has been changed successfully, please"
+  },
+  {
+    "Code": "unauthorized-access",
+    "Id": "Anda tidak memiliki otorisasi. Hubungi Administrator",
+    "En": "You are not authorized. Contact your Administrator"
+  },
+  {
+    "Code": "unauthorized-token",
+    "Id": "Unauthorized. Token tidak valid atau kadaluarsa",
+    "En": "Unauthorized. Invalid or expired token"
+  },
+  {
+    "Code": "uncheck-all",
+    "Id": "Hapus Semua Centang",
+    "En": "UnCheck All"
+  },
+  {
+    "Code": "unknown-exception",
+    "Id": "Error tidak diketahui",
+    "En": "Unknown error"
+  },
+  {
+    "Code": "update",
+    "Id": "Perbarui",
+    "En": "Update"
+  },
+  {
+    "Code": "update-at",
+    "Id": "Diperbarui Pada",
+    "En": "Updated At"
+  },
+  {
+    "Code": "update-by",
+    "Id": "Diperbarui Oleh",
+    "En": "Updated By"
+  },
+  {
+    "Code": "update-data",
+    "Id": "Perbarui Data",
+    "En": "Update Data"
+  },
+  {
+    "Code": "upload-file",
+    "Id": "Unggah Berkas",
+    "En": "Upload File"
+  },
+  {
+    "Code": "user",
+    "Id": "Pengguna",
+    "En": "User"
+  },
+  {
+    "Code": "user-agent",
+    "Id": "Agen Pengguna",
+    "En": "User Agent"
+  },
+  {
+    "Code": "user-name",
+    "Id": "Nama Pengguna",
+    "En": "User Name"
+  },
+  {
+    "Code": "username",
+    "Id": "Nama Pengguna",
+    "En": "Username"
+  }
+]

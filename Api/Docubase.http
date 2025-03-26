@@ -1,0 +1,6 @@
+@Docubase_HostAddress = http://localhost:5265
+
+GET {{Docubase_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
