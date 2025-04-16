@@ -42,7 +42,6 @@
             if (cache.LoginCount >= loginAttempt)
             {
                 cache.LoginCount++;
-                memoryCache.Set(request.UserName, cache);
 
                 var minute = (DateTime.Now - cache.LastLogin).TotalMinutes;
                 if (minute < loginAllowed)

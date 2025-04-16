@@ -19,6 +19,8 @@ namespace Api.DataAccess
         }
 
         public DbSet<Categories> Categories { get; set; }
+        public DbSet<CategoriesShared> CategoriesShared { get; set; }
+        public DbSet<CategoriesSharedPrivillege> CategoriesSharedPrivillege { get; set; }
 
         public DbSet<ApplicationLog> ApplicationLog { get; set; }
         public DbSet<AuditTrail> AuditTrail { get; set; }
