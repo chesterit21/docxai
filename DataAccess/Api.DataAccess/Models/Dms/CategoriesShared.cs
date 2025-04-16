@@ -11,7 +11,7 @@ namespace Api.DataAccess.Models.Dms
 
         [Required]
         [Column(TypeName = "integer")]
-        public string CategoryID { get; set; }
+        public int CategoryID { get; set; }
 
         [Column(TypeName = "integer")]
         public string UserID { get; set; }
