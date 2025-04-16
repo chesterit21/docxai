@@ -21,7 +21,15 @@ namespace Api.DataAccess
         public DbSet<Categories> Categories { get; set; }
         public DbSet<CategoriesShared> CategoriesShared { get; set; }
         public DbSet<CategoriesSharedPrivillege> CategoriesSharedPrivillege { get; set; }
+        public DbSet<ApprovalFlows> ApprovalFlows { get; set; }
+        public DbSet<Approvals> Approvals { get; set; }
+        public DbSet<ApprovalStatus> ApprovalStatus { get; set; }
         public DbSet<Attributtes> Attributtes { get; set; }
+        public DbSet<DocumentAttributes> DocumentAttributes { get; set; }
+        public DbSet<DocumentFiles> DocumentFiles { get; set; }
+        public DbSet<Documents> Documents { get; set; }
+        public DbSet<DocumentShared> DocumentShared { get; set; }
+        public DbSet<DocumentSharedPrivillege> DocumentSharedPrivillege { get; set; }
 
         public DbSet<ApplicationLog> ApplicationLog { get; set; }
         public DbSet<AuditTrail> AuditTrail { get; set; }
