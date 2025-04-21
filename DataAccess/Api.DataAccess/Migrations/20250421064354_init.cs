@@ -13,15 +13,15 @@ namespace Api.DataAccess.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Categories",
+                name: "Attributtes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CategoryName = table.Column<string>(type: "varchar(100)", nullable: false),
-                    CategoryDesc = table.Column<string>(type: "text", nullable: true),
-                    ParentId = table.Column<int>(type: "integer", nullable: true),
-                    IsNeedApproval = table.Column<bool>(type: "boolean", nullable: false),
+                    AttributteName = table.Column<string>(type: "varchar(100)", nullable: false),
+                    AttributeElement = table.Column<string>(type: "json", nullable: true),
+                    AttributteType = table.Column<string>(type: "varchar(50)", nullable: true),
+                    AttributeMaxLength = table.Column<int>(type: "integer", nullable: false),
                     InsertedBy = table.Column<int>(type: "integer", nullable: false),
                     InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedBy = table.Column<int>(type: "integer", nullable: false),
@@ -30,12 +30,69 @@ namespace Api.DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Categories_Categories_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "Categories",
-                        principalColumn: "Id");
+                    table.PrimaryKey("PK_Attributtes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CategoriesShared",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CategoryID = table.Column<int>(type: "integer", nullable: false),
+                    UserID = table.Column<int>(type: "integer", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoriesShared", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CategoriesSharedPrivillege",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CategoriesSharedID = table.Column<int>(type: "integer", nullable: false),
+                    IsView = table.Column<bool>(type: "boolean", nullable: false),
+                    IsEdit = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDelete = table.Column<bool>(type: "boolean", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoriesSharedPrivillege", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Documents",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CategoryID = table.Column<int>(type: "integer", nullable: false),
+                    DocumentTitle = table.Column<string>(type: "varchar(100)", nullable: false),
+                    DocumentDesc = table.Column<string>(type: "varchar(255)", nullable: true),
+                    Owner = table.Column<int>(type: "integer", nullable: false),
+                    FileSize = table.Column<int>(type: "integer", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RemindderDays = table.Column<int>(type: "integer", nullable: false),
+                    RemandireDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RelatedDocumentId = table.Column<int>(type: "integer", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Documents", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -255,6 +312,93 @@ namespace Api.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Approvals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CategoryID = table.Column<int>(type: "integer", nullable: false),
+                    DocumentID = table.Column<int>(type: "integer", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Approvals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Approvals_Documents_DocumentID",
+                        column: x => x.DocumentID,
+                        principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DocumentAttributes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DocumentID = table.Column<int>(type: "integer", nullable: false),
+                    AttributeID = table.Column<int>(type: "integer", nullable: false),
+                    AttributeValues = table.Column<string>(type: "json", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DocumentAttributes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DocumentAttributes_Attributtes_AttributeID",
+                        column: x => x.AttributeID,
+                        principalTable: "Attributtes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DocumentAttributes_Documents_DocumentID",
+                        column: x => x.DocumentID,
+                        principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DocumentFiles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DocumentID = table.Column<int>(type: "integer", nullable: false),
+                    DocumentType = table.Column<string>(type: "varchar(100)", nullable: true),
+                    DocumentFileName = table.Column<string>(type: "varchar(1000)", nullable: true),
+                    DocumentFileSize = table.Column<int>(type: "integer", nullable: false),
+                    DocumentFileContent = table.Column<string>(type: "varchar(1000)", nullable: true),
+                    DocumentFilePath = table.Column<string>(type: "varchar(1000)", nullable: true),
+                    IsMainDocumentFile = table.Column<bool>(type: "boolean", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DocumentFiles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DocumentFiles_Documents_DocumentID",
+                        column: x => x.DocumentID,
+                        principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TblMsUser",
                 columns: table => new
                 {
@@ -262,7 +406,8 @@ namespace Api.DataAccess.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserName = table.Column<string>(type: "varchar(50)", nullable: false),
                     CompanyId = table.Column<string>(type: "varchar(15)", nullable: false),
-                    FullName = table.Column<string>(type: "varchar(100)", nullable: false),
+                    FullName = table.Column<string>(type: "varchar(150)", nullable: false),
+                    EmailAddress = table.Column<string>(type: "varchar(150)", nullable: false),
                     UserPassword = table.Column<string>(type: "varchar(64)", nullable: true),
                     EmailVerified = table.Column<bool>(type: "boolean", nullable: false),
                     IsADUser = table.Column<bool>(type: "boolean", nullable: false),
@@ -314,6 +459,146 @@ namespace Api.DataAccess.Migrations
                         column: x => x.RoleId,
                         principalTable: "TblMsRole",
                         principalColumn: "RoleId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApprovalStatus",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ApprovalID = table.Column<int>(type: "integer", nullable: false),
+                    ApprovalStatusDesc = table.Column<string>(type: "varchar(255)", nullable: true),
+                    ApprovalDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Remark = table.Column<string>(type: "varchar(255)", nullable: true),
+                    Reason = table.Column<string>(type: "varchar(255)", nullable: true),
+                    CurrentStep = table.Column<string>(type: "text", nullable: true),
+                    NextStep = table.Column<string>(type: "text", nullable: true),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApprovalStatus", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ApprovalStatus_Approvals_ApprovalID",
+                        column: x => x.ApprovalID,
+                        principalTable: "Approvals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CategoryName = table.Column<string>(type: "varchar(100)", nullable: false),
+                    CategoryDesc = table.Column<string>(type: "text", nullable: true),
+                    ParentId = table.Column<int>(type: "integer", nullable: true),
+                    IsNeedApproval = table.Column<bool>(type: "boolean", nullable: false),
+                    CategoryID = table.Column<int>(type: "integer", nullable: true),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Categories_Approvals_CategoryID",
+                        column: x => x.CategoryID,
+                        principalTable: "Approvals",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Categories_Categories_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Categories",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ApprovalFlows",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ApprovalID = table.Column<int>(type: "integer", nullable: false),
+                    Step = table.Column<string>(type: "text", nullable: true),
+                    MaxStep = table.Column<string>(type: "text", nullable: true),
+                    UserID = table.Column<int>(type: "integer", nullable: false),
+                    RoleID = table.Column<int>(type: "integer", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApprovalFlows", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ApprovalFlows_Approvals_ApprovalID",
+                        column: x => x.ApprovalID,
+                        principalTable: "Approvals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ApprovalFlows_TblMsRole_RoleID",
+                        column: x => x.RoleID,
+                        principalTable: "TblMsRole",
+                        principalColumn: "RoleId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ApprovalFlows_TblMsUser_UserID",
+                        column: x => x.UserID,
+                        principalTable: "TblMsUser",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DocumentShared",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DocumentID = table.Column<int>(type: "integer", nullable: false),
+                    DocumentFilesID = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DocumentShared", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DocumentShared_DocumentFiles_DocumentFilesID",
+                        column: x => x.DocumentFilesID,
+                        principalTable: "DocumentFiles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DocumentShared_Documents_DocumentID",
+                        column: x => x.DocumentID,
+                        principalTable: "Documents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DocumentShared_TblMsUser_UserId",
+                        column: x => x.UserId,
+                        principalTable: "TblMsUser",
+                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -404,10 +689,102 @@ namespace Api.DataAccess.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "DocumentSharedPrivillege",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DocumentSharedID = table.Column<int>(type: "integer", nullable: false),
+                    IsView = table.Column<bool>(type: "boolean", nullable: false),
+                    IsEdit = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDelete = table.Column<bool>(type: "boolean", nullable: false),
+                    InsertedBy = table.Column<int>(type: "integer", nullable: false),
+                    InsertedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedBy = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DocumentSharedPrivillege", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DocumentSharedPrivillege_DocumentShared_DocumentSharedID",
+                        column: x => x.DocumentSharedID,
+                        principalTable: "DocumentShared",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalFlows_ApprovalID",
+                table: "ApprovalFlows",
+                column: "ApprovalID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalFlows_RoleID",
+                table: "ApprovalFlows",
+                column: "RoleID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalFlows_UserID",
+                table: "ApprovalFlows",
+                column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Approvals_DocumentID",
+                table: "Approvals",
+                column: "DocumentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalStatus_ApprovalID",
+                table: "ApprovalStatus",
+                column: "ApprovalID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_CategoryID",
+                table: "Categories",
+                column: "CategoryID");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_ParentId",
                 table: "Categories",
                 column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentAttributes_AttributeID",
+                table: "DocumentAttributes",
+                column: "AttributeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentAttributes_DocumentID",
+                table: "DocumentAttributes",
+                column: "DocumentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentFiles_DocumentID",
+                table: "DocumentFiles",
+                column: "DocumentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentShared_DocumentFilesID",
+                table: "DocumentShared",
+                column: "DocumentFilesID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentShared_DocumentID",
+                table: "DocumentShared",
+                column: "DocumentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentShared_UserId",
+                table: "DocumentShared",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentSharedPrivillege_DocumentSharedID",
+                table: "DocumentSharedPrivillege",
+                column: "DocumentSharedID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TblMsRoleMatrix_MenuId",
@@ -439,7 +816,25 @@ namespace Api.DataAccess.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ApprovalFlows");
+
+            migrationBuilder.DropTable(
+                name: "ApprovalStatus");
+
+            migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "CategoriesShared");
+
+            migrationBuilder.DropTable(
+                name: "CategoriesSharedPrivillege");
+
+            migrationBuilder.DropTable(
+                name: "DocumentAttributes");
+
+            migrationBuilder.DropTable(
+                name: "DocumentSharedPrivillege");
 
             migrationBuilder.DropTable(
                 name: "TblHistoryLogAuditTrail");
@@ -478,13 +873,28 @@ namespace Api.DataAccess.Migrations
                 name: "TblTrEmail");
 
             migrationBuilder.DropTable(
+                name: "Approvals");
+
+            migrationBuilder.DropTable(
+                name: "Attributtes");
+
+            migrationBuilder.DropTable(
+                name: "DocumentShared");
+
+            migrationBuilder.DropTable(
                 name: "TblMsMenu");
 
             migrationBuilder.DropTable(
                 name: "TblMsRole");
 
             migrationBuilder.DropTable(
+                name: "DocumentFiles");
+
+            migrationBuilder.DropTable(
                 name: "TblMsUser");
+
+            migrationBuilder.DropTable(
+                name: "Documents");
 
             migrationBuilder.DropTable(
                 name: "TblMsCompany");

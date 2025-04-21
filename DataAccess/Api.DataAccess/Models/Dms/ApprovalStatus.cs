@@ -17,11 +17,15 @@ namespace Api.DataAccess.Models.Dms
 		[ForeignKey(nameof(ApprovalID))]
 		public virtual Approvals Approvals { get; set; }
 
+		[Column(TypeName = "varchar(255)")]
 		public string ApprovalStatusDesc { get; set; }
 
 		public DateTime ApprovalDate { get; set; }
+
+		[Column(TypeName = "varchar(255)")]
 		public string Remark { get; set; }
 
+		[Column(TypeName = "varchar(255)")]
 		public string Reason { get; set; }
 
 		public string CurrentStep { get; set; }

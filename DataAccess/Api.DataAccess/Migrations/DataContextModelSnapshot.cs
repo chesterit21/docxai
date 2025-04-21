@@ -22,6 +22,183 @@ namespace Api.DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalFlows", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApprovalID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MaxStep")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RoleID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Step")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovalID");
+
+                    b.HasIndex("RoleID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("ApprovalFlows");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ApprovalDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ApprovalID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ApprovalStatusDesc")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("CurrentStep")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NextStep")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovalID");
+
+                    b.ToTable("ApprovalStatus");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.Approvals", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DocumentID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentID");
+
+                    b.ToTable("Approvals");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.Attributtes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttributeElement")
+                        .HasColumnType("json");
+
+                    b.Property<int>("AttributeMaxLength")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AttributteName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("AttributteType")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Attributtes");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Dms.Categories", b =>
                 {
                     b.Property<int>("Id")
@@ -32,6 +209,9 @@ namespace Api.DataAccess.Migrations
 
                     b.Property<string>("CategoryDesc")
                         .HasColumnType("text");
+
+                    b.Property<int?>("CategoryID")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
@@ -60,9 +240,307 @@ namespace Api.DataAccess.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryID");
+
                     b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.CategoriesShared", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CategoriesShared");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.CategoriesSharedPrivillege", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoriesSharedID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEdit")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsView")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CategoriesSharedPrivillege");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentAttributes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AttributeID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AttributeValues")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<int>("DocumentID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttributeID");
+
+                    b.HasIndex("DocumentID");
+
+                    b.ToTable("DocumentAttributes");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentFiles", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DocumentFileContent")
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("DocumentFileName")
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("DocumentFilePath")
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<int>("DocumentFileSize")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DocumentID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DocumentType")
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsMainDocumentFile")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentID");
+
+                    b.ToTable("DocumentFiles");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentShared", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DocumentFilesID")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DocumentID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentFilesID");
+
+                    b.HasIndex("DocumentID");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DocumentShared");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentSharedPrivillege", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DocumentSharedID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEdit")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsView")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentSharedID");
+
+                    b.ToTable("DocumentSharedPrivillege");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.Documents", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryID")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DocumentDesc")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("DocumentTitle")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FileSize")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Owner")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RelatedDocumentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("RemandireDateTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RemindderDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("Api.DataAccess.Models.Masters.Company", b =>
@@ -256,12 +734,16 @@ namespace Api.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(15)");
 
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("varchar(150)");
+
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(150)");
 
                     b.Property<DateTime>("InsertedAt")
                         .HasColumnType("timestamp with time zone");
@@ -670,14 +1152,135 @@ namespace Api.DataAccess.Migrations
                     b.ToTable("TblLogTransaction");
                 });
 
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalFlows", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Approvals", "Approvals")
+                        .WithMany()
+                        .HasForeignKey("ApprovalID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Api.DataAccess.Models.Masters.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Api.DataAccess.Models.Masters.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Approvals");
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalStatus", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Approvals", "Approvals")
+                        .WithMany()
+                        .HasForeignKey("ApprovalID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Approvals");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.Approvals", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Documents")
+                        .WithMany()
+                        .HasForeignKey("DocumentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Documents");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Dms.Categories", b =>
                 {
+                    b.HasOne("Api.DataAccess.Models.Dms.Approvals", null)
+                        .WithMany("Categories")
+                        .HasForeignKey("CategoryID");
+
                     b.HasOne("Api.DataAccess.Models.Dms.Categories", "ParentCategory")
                         .WithMany("ChildCategories")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentAttributes", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Attributtes", "Attributtes")
+                        .WithMany()
+                        .HasForeignKey("AttributeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Documents")
+                        .WithMany()
+                        .HasForeignKey("DocumentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attributtes");
+
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentFiles", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Documents")
+                        .WithMany()
+                        .HasForeignKey("DocumentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentShared", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.DocumentFiles", "DocumentFiles")
+                        .WithMany()
+                        .HasForeignKey("DocumentFilesID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Documents")
+                        .WithMany()
+                        .HasForeignKey("DocumentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Api.DataAccess.Models.Masters.User", "UserDocumentFiles")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentFiles");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("UserDocumentFiles");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentSharedPrivillege", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.DocumentShared", "DocumentShared")
+                        .WithMany()
+                        .HasForeignKey("DocumentSharedID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentShared");
                 });
 
             modelBuilder.Entity("Api.DataAccess.Models.Masters.RoleMatrix", b =>
@@ -765,6 +1368,11 @@ namespace Api.DataAccess.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.Approvals", b =>
+                {
+                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("Api.DataAccess.Models.Dms.Categories", b =>

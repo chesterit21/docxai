@@ -14,7 +14,7 @@ namespace Api.DataAccess.Models.Dms
         public int CategoryID { get; set; }
 
         [Column(TypeName = "integer")]
-        public string UserID { get; set; }
+        public int UserID { get; set; }
 
     }
 }

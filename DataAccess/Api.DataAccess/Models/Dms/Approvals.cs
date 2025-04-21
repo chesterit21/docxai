@@ -14,13 +14,13 @@ namespace Api.DataAccess.Models.Dms
 		public int CategoryID { get; set; }
 
 		[ForeignKey(nameof(CategoryID))]
-		public virtual Categories Categories { get; set; }
-		
+		public virtual List<Categories> Categories { get; set; }
+
 		[Required]
 		public int DocumentID { get; set; }
 
 		[ForeignKey(nameof(DocumentID))]
 		public virtual Documents Documents { get; set; }
-		
+
 	}
 }

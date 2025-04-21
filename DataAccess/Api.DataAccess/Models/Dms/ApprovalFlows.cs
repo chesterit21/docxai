@@ -28,9 +28,9 @@ namespace Api.DataAccess.Models.Dms
 		public virtual User User { get; set; }
 		
 		[Required]
-		public int GroupID { get; set; }
+		public int RoleID { get; set; }
 
-		[ForeignKey(nameof(GroupID))]
+		[ForeignKey(nameof(RoleID))]
 		public virtual Role Role { get; set; }
 
 
