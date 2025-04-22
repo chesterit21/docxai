@@ -5,7 +5,8 @@
     using Api.Domain.EntityRequests;
     using Api.Domain.EntityRequests.Masters;
     using Api.Services.Masters;
-    using Microsoft.AspNetCore.Mvc;
+	using Microsoft.AspNetCore.Authorization;
+	using Microsoft.AspNetCore.Mvc;
     using System.ComponentModel;
 
 
@@ -23,7 +24,8 @@
             return ResultFactory.Create(result);
         }
 
-        [UserAction(UserAction.Read)]
+
+        [AllowAnonymous]
         [HttpGet("nested")]
         public async Task<IActionResult> GetNested()
         {

@@ -38,7 +38,7 @@ namespace Api.Services
             //if (isThere.Count < 0) return;
             //mydbcontext.RemoveRange(isThere);
             //await mydbcontext.SaveChangesAsync().ConfigureAwait(false);
-            if (isThere.Count < 0)
+            if (isThere.Count == 0)
             {
                 await mydbcontext.Company.AddAsync(new Company()
                 {
@@ -54,7 +54,7 @@ namespace Api.Services
             var isRoleAdminExist = await mydbcontext.Role.AsNoTracking().Where(x => roleAdminStr.Contains(x.Name)).ToListAsync().ConfigureAwait(false);
             //if (isRoleAdminExist.Count < 0) return;
             //mydbcontext.RemoveRange(isRoleAdminExist);
-            if (isRoleAdminExist.Count < 0)
+            if (isRoleAdminExist.Count == 0)
             {
                 Role role = new Role() { Name = roleAdminStr };
                 await mydbcontext.Role.AddAsync(role).ConfigureAwait(false);
@@ -67,7 +67,7 @@ namespace Api.Services
             var isUserAdminExist = await mydbcontext.User.AsNoTracking().Where(x => x.UserName.Contains(user.UserName)).ToListAsync().ConfigureAwait(false);
             //if (isRoleAdminExist.Count < 0) return;
             //mydbcontext.RemoveRange(isUserAdminExist);
-            if (isRoleAdminExist.Count < 0)
+            if (isUserAdminExist.Count == 0)
             {
                 await mydbcontext.User.AddAsync(user).ConfigureAwait(false);
                 await mydbcontext.SaveChangesAsync().ConfigureAwait(false);
@@ -78,7 +78,7 @@ namespace Api.Services
             //mydbcontext.RemoveRange(UserCompanyRes);
             //await mydbcontext.SaveChangesAsync().ConfigureAwait(false);
 
-            if (UserCompanyRes.Count < 0)
+            if (UserCompanyRes.Count > 0)
             {
                 UserCompany userComp = new UserCompany() { UserId = user.UserId, CompanyId = "shuba" };
                 await mydbcontext.UserCompany.AddAsync(userComp).ConfigureAwait(false);
