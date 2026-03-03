@@ -11,7 +11,7 @@ namespace Api.Services.Masters
 {
     public class RoleMatrixService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IRoleMatrixRepository repository, IMenuRepository menuRepository, IRoleRepository roleRepository) : BaseService(accessor, languageRepository)
     {
-        public async Task<object> GetAll(ReqestFilter request)
+        public async Task<object> GetAll(RequestFilter request)
         {
             await ValidateInputRequestAsync(request);
             var result = await repository.GetAsync(null, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);

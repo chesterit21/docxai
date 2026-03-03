@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Api.DataAccess.Models.Dms;
 using Api.Domain.EntityRequests.Dms;
+using Api.DataAccess.Models.Systems;
+using Api.Repository.Systems;
 
 namespace Api.Repository.Masters
 {
@@ -13,7 +15,7 @@ namespace Api.Repository.Masters
 		List<Dropdown> GetDropdownSharedPrivillege();
 	}
 
-	public class DropdownRepository()
+	public class DropdownRepository(DataContext context, IHttpContextAccessor accessor) : Repository<Dropdown>(context, accessor), IDropdownRepository
 	{
 		public List<Dropdown> GetDropdownSharedPrivillege()
 		{
@@ -34,7 +36,7 @@ namespace Api.Repository.Masters
 		//		var modelCategoriesSharedPrivillege = new CategoriesSharedPrivillege();
 		//		modelCategoriesShared.Id = request.Id;
 		//		modelCategoriesShared.CategoryID = request.CategoryID;
-		//		modelCategoriesShared.UserID = x.UserID;
+		//		modelCategoriesShared.ApproverUserID = x.ApproverUserID;
 
 		//		await InsertAsync(modelCategoriesShared);
 

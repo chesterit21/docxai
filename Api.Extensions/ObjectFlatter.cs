@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq.Expressions;
 
 namespace Api.Extensions
 {
@@ -24,26 +25,33 @@ namespace Api.Extensions
 
         private static Dictionary<string, object> FlattenObject(object obj)
         {
-            var result = new Dictionary<string, object>();
-
-            var properties = obj.GetType().GetProperties();
-
-            foreach (var prop in properties)
+			var result = new Dictionary<string, object>();
+			try
             {
-                var value = prop.GetValue(obj);
+				var properties = obj.GetType().GetProperties();
 
-                if (value != null && !IsSimpleType(prop.PropertyType))
-                {
-                    var nestedProperties = FlattenObject(value);
-                    foreach (var kvp in nestedProperties)
-                    {
-                        result[kvp.Key] = kvp.Value;
-                    }
-                }
-                else
-                {
-                    result[prop.Name] = value;
-                }
+				foreach (var prop in properties)
+				{
+					var value = prop.GetValue(obj);
+
+					if (value != null && !IsSimpleType(prop.PropertyType))
+					{
+						var nestedProperties = FlattenObject(value);
+						foreach (var kvp in nestedProperties)
+						{
+							result[kvp.Key] = kvp.Value;
+						}
+					}
+					else
+					{
+						result[prop.Name] = value;
+					}
+				}
+			}
+            catch (Exception e)
+            {
+
+                throw;
             }
 
             return result;
@@ -51,7 +59,7 @@ namespace Api.Extensions
 
         private static bool IsSimpleType(Type type)
         {
-            return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal);
+            return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal) || type == typeof(Guid);
         }
     }
 

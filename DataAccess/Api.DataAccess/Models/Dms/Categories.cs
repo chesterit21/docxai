@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Api.DataAccess.Models.Masters;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Api.DataAccess.Models.Dms
 {
-    [Table("Categories")]
-    public class Categories : BaseEntityDefault
-    {
+    [Table("TblCategories")]
+    public class Categories : BaseEntitySoftDelete, IHasOwner
+	{
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
@@ -15,15 +16,31 @@ namespace Api.DataAccess.Models.Dms
 
         [Column(TypeName = "text")]
         public string CategoryDesc { get; set; }
-        
-        public int? ParentId { get; set; }
 
-        //[NotMapped]
-        [ForeignKey(nameof(ParentId))]
+		[Column(TypeName = "integer")]
+		public int Owner { get; set; }
+
+		public int? ParentId { get; set; }
+
+		[ForeignKey(nameof(ParentId))]
         public virtual Categories ParentCategory { get; set; }
-        //[NotMapped]
+        
         public virtual List<Categories> ChildCategories { get; set; }
-        public bool IsNeedApproval { get; set; }
+        public bool IsNeedApproval { get; set; }		
 
-    }
+		[ForeignKey(nameof(Owner))]
+		public virtual User OwnerInfo { get; set; }
+
+		//[NotMapped]
+		public ICollection<CategoriesShared> CategoriesShareds { get; set; }
+
+		//[NotMapped]
+		public ICollection<Documents> Documents { get; set; }
+
+		//[NotMapped]
+		//public virtual Approvals Approval { get; set; }
+		public ICollection<Approvals> Approvals { get; set; }
+
+		public ICollection<CategoriesFavorite> CategoriesFavorite { get; set; }
+	}
 }

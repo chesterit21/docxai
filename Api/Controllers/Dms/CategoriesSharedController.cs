@@ -9,18 +9,35 @@ using System.ComponentModel;
 
 namespace Docubase.api.Controllers.Dms
 {
-	[DisplayName("## Categories Shared")]
-	[Menu("CategoriesShared")]
+	[DisplayName("Shared Categories")]
+	[Menu("MnDocument")]
 	[Route("[controller]")]
 	[ApiController]
-	public class CategoriesShared(CategoriesSharedService service) : ControllerBase
+	public class CategoriesSharedController(CategoriesSharedService service) : ControllerBase
 	{
-		[AllowAnonymous]
-		[HttpPost]
-		public async Task<IActionResult> SubmitShare(RequestCategoriesShared request)
+		[UserAction(UserAction.Insert)]
+		[HttpPost("add-shared")]
+		public async Task<IActionResult> SubmitShare(RequestCreateCategoriesShared request)
 		{
 			var result = await service.SubmitShare(request);
 			return ResultFactory.Create(result);
 		}
+
+		[UserAction(UserAction.Read)]
+		[HttpGet("get-shared-users")]
+		public async Task<IActionResult> GetListSharedUsers([FromQuery]int categoryId)
+		{
+			var result = await service.GetListSharedUsers(categoryId);
+			return ResultFactory.Create(result);
+		}
+
+		[UserAction(UserAction.Delete)]
+		[HttpDelete("delete-shared-category")]
+		public async Task<IActionResult> DeleteWorkflow([FromQuery] int categoryId)
+		{
+			var result = await service.DeleteSharedCategory(categoryId);
+			return ResultFactory.Create();
+		}
+
 	}
 }

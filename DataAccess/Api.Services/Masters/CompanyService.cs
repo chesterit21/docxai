@@ -3,6 +3,7 @@ using Api.Domain;
 using Api.Domain.Constants;
 using Api.Domain.EntityRequests;
 using Api.Domain.EntityRequests.Masters;
+using Api.Domain.EntityResponses;
 using Api.Extensions;
 using Api.Repository.Masters;
 using Microsoft.AspNetCore.Http;
@@ -11,12 +12,22 @@ namespace Api.Services.Masters
 {
     public class CompanyService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, ICompanyRepository repository) : BaseService(accessor, languageRepository)
     {
-        public async Task<object> GetAll(ReqestFilter request)
+        public async Task<object> GetAll(RequestFilter request)
         {
             await ValidateInputRequestAsync(request);
 
-            var result = await repository.GetAsync(null, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);
-            return ObjectFlatter.Flatten(result);
+			var totalRecords = await repository.CountAsync(x => x.IsActive == true);
+			var records = await repository.GetAsync(x => x.IsActive == true, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);
+
+			return new ResponsePagination
+			{
+				TotalRecords = totalRecords,
+				TotalPages = GetTotalPages(totalRecords, request.Limit),
+				Data = records
+			};
+
+			//var result = await repository.GetAsync(x => x.IsActive == true, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);
+            //return ObjectFlatter.Flatten(result);
         }
 
         public async Task<Company> Get(string companyId)
@@ -25,7 +36,7 @@ namespace Api.Services.Masters
 
             await repository.LogTransaction($"Get company by CompanyId {companyId}", Domain.Attributes.UserAction.Read);
 
-            return await repository.GetSingleAsync(x => x.CompanyId == companyId);
+            return await repository.GetSingleAsync(x => x.CompanyId == companyId && x.IsActive == true);
         }
 
         public async Task<List<Company>> GetAll(int page, int limit)
@@ -64,7 +75,7 @@ namespace Api.Services.Masters
         {
             await ValidateInputRequestAsync(request);
 
-            await CheckIfExist(request.CompanyId, request.Name);
+            //await CheckIfExist(request.CompanyId, request.Name);
 
             var entity = request.CopyProperties<Company>();
             

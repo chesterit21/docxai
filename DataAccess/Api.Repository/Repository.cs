@@ -1,5 +1,7 @@
 ﻿using Api.DataAccess;
 using Api.DataAccess.Extensions;
+using Api.DataAccess.Models;
+using Api.DataAccess.Models.Dms;
 using Api.DataAccess.Models.Systems;
 using Api.Domain;
 using Api.Domain.Attributes;
@@ -9,17 +11,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using NPOI.SS.Formula.Functions;
 using System.Data;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace Api.Repository
 {
     public interface IRepository<TEntity> where TEntity : BaseEntity
-    {
+	{
         int UserId { get; }
         string UserName { get; }
 
@@ -79,10 +83,11 @@ namespace Api.Repository
         Task<Guid> LogTransaction(string description, UserAction userAction);
         Task<Guid> LogTransactionAndAuditTrail(string description, UserAction userAction, params TEntity[] entities);
         int GetTotalPages(int totalRecords, int limit);
-    }
+        //Task<bool> CheckOwnerPrivilegesAsync<TPriv>(int entityId, Func<TPriv, bool> privilegePredicate) where TPriv : class;
+	}
 
     public class Repository<TEntity>(DataContext context, IHttpContextAccessor accessor) : IDisposable, IRepository<TEntity> where TEntity : BaseEntity
-    {
+	{
         private enum CommandAction
         {
             Insert, Update
@@ -91,13 +96,14 @@ namespace Api.Repository
         protected readonly DataContext context = context;
         protected readonly HttpContext httpContext = accessor?.HttpContext;
 
-        private readonly DbSet<TEntity> dbset = context.Set<TEntity>();
+        private readonly DbSet<TEntity> dbset = context.Set<TEntity>();		
 
-        public int UserId => int.Parse(accessor?.HttpContext?.User?.Identity?.Name ?? "0");
+		public int UserId => int.Parse(accessor?.HttpContext?.User?.Identity?.Name ?? "0");
+		public string UserRoleInApp => accessor?.HttpContext?.GetClaim<string>("user_type");
 
-        public string UserName => accessor?.HttpContext?.GetClaim<string>("given_name");
+		public string UserName => accessor?.HttpContext?.GetClaim<string>("given_name");//GivenName
 
-        public int Skip(int page, int limit) => (page - 1) * limit;
+		public int Skip(int page, int limit) => (page - 1) * limit;
 
         public int GetTotalPages(int totalRecords, int limit)
         {
@@ -115,7 +121,19 @@ namespace Api.Repository
         {
             context.ChangeTrackingBehavior(behavior);
         }
-        public async Task<long> CountAsync(DateTime insertedDateStart, DateTime insertedDateEnd)
+
+		private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
+		{
+			WriteIndented = true,
+			ReferenceHandler = ReferenceHandler.Preserve // or Preserve if needed
+		};
+
+		public static string SerializeArray<T>(T[] array)
+		{
+			return JsonSerializer.Serialize(array, _options);
+		}
+
+		public async Task<long> CountAsync(DateTime insertedDateStart, DateTime insertedDateEnd)
         {
             return await dbset.Where(x => x.InsertedAt >= insertedDateStart && x.InsertedAt <= insertedDateEnd).CountAsync();
             //var dateColumn = nameof(BaseEntityDefault.InsertedAt);
@@ -405,7 +423,7 @@ namespace Api.Repository
 
             where = where[..^4];
 
-            return await dbset.Where(where).ToListAsync();
+            return await dbset.Where(where).AsNoTracking().ToListAsync();
         }
 
         public async Task<int> LogAuditTrailInsert(Guid? transLogId, params TEntity[] entities)
@@ -424,15 +442,17 @@ namespace Api.Repository
             var entityType = context.Model.FindEntityType(type);
             var tableName = entityType.GetTableName();
 
-            var auditTrail = new AuditTrail
+
+			var auditTrail = new AuditTrail
             {
                 TransactionLogId = transLogId,
-                After = JsonSerializer.Serialize(entities),
-                Before = null,
+				//After = JsonSerializer.Serialize(entities, options),
+				After = SerializeArray(entities),
+				Before = null,
                 Command = "Insert",
                 TableName = tableName,
                 InsertedBy = UserId,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = DateTime.Now,
             };
 
             context.AuditTrail.Add(auditTrail);
@@ -449,22 +469,25 @@ namespace Api.Repository
             if (classType is AuditTrail || classType is ApplicationLog || classType is TransactionLog)
                 return default;
 
-            Encryption.MaskPassword(entities);
+			context.Entry(entities[0]).State = EntityState.Detached;
+			Encryption.MaskPassword(entities);
 
-            var entityType = context.Model.FindEntityType(typeof(TEntity));
-            var tableName = entityType.GetTableName();
+			var entityType = context.Model.FindEntityType(typeof(TEntity));
+			var tableName = entityType.GetTableName();
 
             var entitiesFromDb = await GetOldDataFromDbAsync(entities);
-
-            var auditTrail = new AuditTrail
+			
+			var auditTrail = new AuditTrail
             {
                 TransactionLogId = transLogId,
-                After = JsonSerializer.Serialize(entities),
-                Before = JsonSerializer.Serialize(entitiesFromDb),
-                Command = "Update",
+				//After = JsonSerializer.Serialize(entities, options),
+				//Before = JsonSerializer.Serialize(entitiesFromDb, options),
+				After = SerializeArray(entities),
+				Before = SerializeArray(entitiesFromDb.ToArray()),
+				Command = "Update",
                 TableName = tableName,
                 InsertedBy = UserId,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = DateTime.Now,
             };
 
             context.AuditTrail.Add(auditTrail);
@@ -487,16 +510,18 @@ namespace Api.Repository
             var tableName = entityType.GetTableName();
 
             var entitiesFromDb = await GetOldDataFromDbAsync(entities);
-
-            var auditTrail = new AuditTrail
+			
+			var auditTrail = new AuditTrail
             {
                 TransactionLogId = transLogId,
-                After = JsonSerializer.Serialize(entities),
-                Before = JsonSerializer.Serialize(entitiesFromDb),
-                Command = "Update | Insert",
+               // After = JsonSerializer.Serialize(entities),
+                //Before = JsonSerializer.Serialize(entitiesFromDb),
+                After = SerializeArray(entities),
+				Before = SerializeArray(entitiesFromDb.ToArray()),
+				Command = "Update | Insert",
                 TableName = tableName,
                 InsertedBy = UserId,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = DateTime.Now,
             };
 
             context.AuditTrail.Add(auditTrail);
@@ -524,16 +549,16 @@ namespace Api.Repository
             {
                 TransactionLogId = transLogId,
                 After = null,
-                Before = JsonSerializer.Serialize(entitiesFromDb),
-                Command = "Delete",
+                //Before = JsonSerializer.Serialize(entitiesFromDb),
+				Before = SerializeArray(entitiesFromDb.ToArray()),
+				Command = "Delete",
                 TableName = tableName,
                 Id = Guid.NewGuid(),
                 InsertedBy = UserId,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = DateTime.Now,
             };
 
             context.AuditTrail.Add(auditTrail);
-
             return await context.SaveChangesAsync();
         }
 
@@ -561,7 +586,7 @@ namespace Api.Repository
                 Parameter = body,
                 Description = $"[{UserName}] {description}",
                 InsertedBy = UserId,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = DateTime.Now,
             };
 
             context.TransactionLog.Add(log);
@@ -639,7 +664,7 @@ namespace Api.Repository
         //            Command = entity.State.ToString(),
         //            TableName = tableName,
         //            InsertedBy = GetUserId(),
-        //            InsertedAt = DateTime.UtcNow,
+        //            InsertedAt = DateTime.Now,
         //        };
 
         //        AuditTrail.Add(auditTrail);
@@ -691,13 +716,13 @@ namespace Api.Repository
                 {
                     type.GetProperty(insertedBy).SetValue(entity, userId);
                     //type.GetProperty(insertedAt).SetValue(entity, DateTime.Now);
-                    type.GetProperty(insertedAt).SetValue(entity, DateTime.UtcNow);
+                    type.GetProperty(insertedAt).SetValue(entity, DateTime.Now);
 
                     if (hasUpdate)
                     {
                         type.GetProperty(updatedBy).SetValue(entity, userId);
                         //type.GetProperty(updatedAt).SetValue(entity, DateTime.Now);
-                        type.GetProperty(updatedAt).SetValue(entity, DateTime.UtcNow);
+                        type.GetProperty(updatedAt).SetValue(entity, DateTime.Now);
                     }
                 }
 
@@ -712,7 +737,7 @@ namespace Api.Repository
                     {
                         type.GetProperty(updatedBy).SetValue(entity, userId);
                         //type.GetProperty(updatedAt).SetValue(entity, DateTime.Now);
-                        type.GetProperty(updatedAt).SetValue(entity, DateTime.UtcNow);
+                        type.GetProperty(updatedAt).SetValue(entity, DateTime.Now);
                     }
                 }
 
@@ -727,7 +752,7 @@ namespace Api.Repository
                         {
                             type.GetProperty(insertedBy).SetValue(entity, userId);
                             //type.GetProperty(insertedAt).SetValue(entity, DateTime.Now);
-                            type.GetProperty(insertedAt).SetValue(entity, DateTime.UtcNow);
+                            type.GetProperty(insertedAt).SetValue(entity, DateTime.Now);
                         }
                         else
                         {

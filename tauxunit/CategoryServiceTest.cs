@@ -1,75 +1,185 @@
-﻿using Api.Domain.EntityRequests.Authentications;
+﻿using Xunit;
+using Moq;
+using Api.Services.Dms;
+using Api.Repository.Masters;
 using Api.Domain.EntityRequests.Dms;
-using Api.Domain.EntityRequests.Masters;
+using Api.Domain.EntityResponses.Dms;
+using Api.DataAccess.Models.Dms;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System;
 
 namespace tauxunit
 {
-    public class CategoryServiceTest
-    {
-        [Fact]
-        public async Task CategoryService_Create()
-        {
-            using var context = MockInstance.GetSqlDbContext();
-            var repo = MockInstance.GetRepositoryInstances(context);
-            var service = repo.CategoryService;
+	public class CategoryServiceTest
+	{
+		private readonly Mock<ICategoryRepository> _repoMock;
+		private readonly Mock<ILanguageRepository> _langRepoMock;
+		private readonly Mock<IApprovalRepository> _approvalRepoMock;
+		private readonly Mock<IHttpContextAccessor> _httpContextMock;
+		private readonly CategoriesService _service;
 
-            var model = await service.Create(new RequestCategory
-            {
-                CategoryName = "Legalitas",
-                CategoryDesc = "Akta Pendirian, NPWP, SIUP, Surat Keterangan Domisili",
-                ParentId = null,
-                ParentCategory = null,
-                ChildCategories = null
-            });
+		public CategoryServiceTest()
+		{
+			_repoMock = new Mock<ICategoryRepository>();
+			_langRepoMock = new Mock<ILanguageRepository>();
+			_approvalRepoMock = new Mock<IApprovalRepository>();
+			_httpContextMock = new Mock<IHttpContextAccessor>();
+			_service = new CategoriesService(_httpContextMock.Object, _langRepoMock.Object, _repoMock.Object, _approvalRepoMock.Object);
+		}
 
-            //var category = await service.GetCategory("Legalitas");
-            //Assert.NotNull(category);
-            Assert.NotNull(model);
-        }
+		[Fact]
+		public async Task CreateCategory_ShouldReturnCategory()
+		{
+			var request = new RequestCategory { CategoryName = "Test", CategoryDesc = "Desc" };
+			//_repoMock.Setup(r => r.GetSingleAsync(It.IsAny<Func<Categories, bool>>())).ReturnsAsync((Categories)null);
+			_repoMock.Setup(r => r.InsertAsync(It.IsAny<Categories>())).ReturnsAsync(new Categories { Id = 1, CategoryName = "Test" });
 
-        //[Fact]
-        //public async Task UserService_CreateAndDeleteUser()
-        //{
-        //    using var context = MockInstance.GetSqlDbContext();
-        //    var repo = MockInstance.GetRepositoryInstances(context);
-        //    var service = repo.UserService;
-        //    var roleOther = 3;
+			var result = await _service.Create(request);
 
-        //    await service.DeleteWithChildren([1]);
-        //    await service.Create(new RequestUserCreate
-        //    {
-        //        IsADUser = false,
-        //        UserName = "test@shuba.co.id",
-        //        FullName = "Test",
-        //        //Password = "5HUB4T0p!23",
-        //        CompanyId = "shuba",
-        //        Roles = [roleOther]
-        //    });
+			Assert.NotNull(result);
+		}
 
-        //    var _users = await service.GetUsers(1, 100);
-        //    Assert.Equal(4, _users.Count);
-        //}
+		[Fact]
+		public async Task GetAll_ShouldReturnPagination()
+		{
+			var request = new RequestCategoryList { CategoryName = "Test", Page = 1, Limit = 10 };
+			_repoMock.Setup(r => r.GetCategories(It.IsAny<string>(), true, null, 1, 10))
+				.ReturnsAsync(new ResponseCategoriesAndCount { Records = new List<ResponseCategoryListItem>(), TotalRecord = 0 });
+			//_repoMock.Setup(r => r.GetAsync(It.IsAny<Func<Categories, bool>>()))
+			//	.ReturnsAsync(new List<Categories>());
 
-        //[Fact]
-        //public async Task Service_ValidateLoginAD()
-        //{
-        //    using var context = MockInstance.GetSqlDbContext();
-        //    var repo = MockInstance.GetRepositoryInstances(context);
-        //    var service = repo.UserService;
+			var result = await _service.GetAll(request, true);
 
-        //    var validity = await service.Login("aduser", "P@ssw0rd");
-        //    Assert.Equal("pertamina", validity?.CompanyId);
-        //}
+			Assert.NotNull(result);
+		}
 
-        //[Fact]
-        //public async Task Service_ValidateLoginEmail()
-        //{
-        //    using var context = MockInstance.GetSqlDbContext();
-        //    var repo = MockInstance.GetRepositoryInstances(context);
-        //    var service = repo.UserService;
+		[Fact]
+		public async Task GetParentHierarchy_ShouldReturnParents()
+		{
+			//_repoMock.Setup(r => r.GetSingleAsync(It.IsAny<Func<Categories, bool>>()))
+			//	.ReturnsAsync(new Categories { Id = 1, CategoryName = "Test", ParentId = null });
 
-        //    var validity = await service.Login("superadmin@shuba.co.id", "5HUB4T0p!23");
-        //    Assert.Equal("shuba", validity?.CompanyId);
-        //}
-    }
+			var result = await _service.GetParentHierarchy(1);
+
+			Assert.NotNull(result);
+			Assert.IsType<List<ParentCategory>>(result);
+		}
+
+		[Fact]
+		public async Task AddFavorite_ShouldReturnFavorite()
+		{
+			_repoMock.Setup(r => r.CheckFavorite(It.IsAny<int>())).ReturnsAsync((CategoriesFavorite)null);
+			_repoMock.Setup(r => r.AddFavorite(It.IsAny<int>())).ReturnsAsync(new CategoriesFavorite { CategoryID = 1 });
+
+			var result = await _service.AddFavorite(1);
+
+			Assert.NotNull(result);
+			Assert.Equal(1, result.CategoryID);
+		}
+
+		[Fact]
+		public async Task UnFavorite_ShouldReturnInt()
+		{
+			_repoMock.Setup(r => r.RemoveFavorite(It.IsAny<int>())).ReturnsAsync(1);
+
+			var result = await _service.UnFavorite(1);
+
+			Assert.Equal(1, result);
+		}
+
+		[Fact]
+		public async Task UpdateCategory_ShouldReturnCategory()
+		{
+			var request = new RequestCategory { Id = 1, CategoryName = "Test", CategoryDesc = "Desc" };
+			//_repoMock.Setup(r => r.GetSingleAsync(It.IsAny<Func<Categories, bool>>())).ReturnsAsync((Categories)null);
+			_repoMock.Setup(r => r.UpdateAsync(It.IsAny<Categories>())).ReturnsAsync(new Categories { Id = 1, CategoryName = "Test" });
+
+			var result = await _service.Update(request);
+
+			Assert.NotNull(result);
+			Assert.Equal("Test", result.CategoryName);
+		}
+
+		[Fact]
+		public async Task SoftDelete_ShouldReturnTrue()
+		{
+			_repoMock.Setup(r => r.MarkAsDeletedAsync(It.IsAny<int>())).ReturnsAsync(true);
+
+			var result = await _service.SoftDelete(1);
+
+			Assert.True(result);
+		}
+
+		[Fact]
+		public async Task SoftUnDelete_ShouldReturnTrue()
+		{
+			_repoMock.Setup(r => r.MarkAsUnDeletedAsync(It.IsAny<int>())).ReturnsAsync(true);
+
+			var result = await _service.SoftUnDelete(1);
+
+			Assert.True(result);
+		}
+
+		[Fact]
+		public async Task HardDelete_ShouldReturnInt()
+		{
+			//_repoMock.Setup(r => r.GetSingleAsync(It.IsAny<Func<Categories, bool>>())).ReturnsAsync(new Categories { Id = 1 });
+			_repoMock.Setup(r => r.DeleteAsync(It.IsAny<int>())).ReturnsAsync(1);
+
+			var result = await _service.HardDelete(1);
+
+			Assert.Equal(1, result);
+		}
+
+		[Fact]
+		public async Task AddWorkFlow_ShouldReturnInt()
+		{
+			var workflow = new RequestCategoryWorkflow
+			{
+				Approval = new RequestCategoryWorkflow.RequestCTApproval { CategoryID = 1, Notes = "Test" },
+				Flows = new List<RequestCategoryWorkflow.RequestCTApprovalFlow>
+			{
+				new RequestCategoryWorkflow.RequestCTApprovalFlow { UserID = 1, Step = 1 }
+			}
+			};
+			//_repoMock.Setup(r => r.GetSingleAsync(It.IsAny<Func<Categories, bool>>())).ReturnsAsync(new Categories { Id = 1 });
+			_repoMock.Setup(r => r.AddWorkFlow(It.IsAny<Approvals>(), It.IsAny<List<ApprovalFlows>>())).ReturnsAsync(1);
+
+			var result = await _service.AddWorkFlow(workflow);
+
+			Assert.Equal(1, result);
+		}
+
+		[Fact]
+		public async Task DeleteWorkFlow_ShouldReturnInt()
+		{
+			_repoMock.Setup(r => r.DeleteWorkFlow(It.IsAny<int>())).ReturnsAsync(1);
+
+			var result = await _service.DeleteWorkFlow(1);
+
+			Assert.Equal(1, result);
+		}
+
+		[Fact]
+		public async Task GetNested_ShouldReturnCategories()
+		{
+			//_repoMock.Setup(r => r.GetNestedCategory()).ReturnsAsync(new List<Categories>());
+
+			var result = await _service.GetNested();
+
+			Assert.NotNull(result);
+		}
+
+		[Fact]
+		public async Task GetNestedByCategoryId_ShouldReturnCategories()
+		{
+			_repoMock.Setup(r => r.GetNestedCategory(It.IsAny<int?>())).ReturnsAsync(new List<Categories>());
+
+			var result = await _service.GetNestedByCategoryId(1);
+
+			Assert.NotNull(result);
+		}
+	}
 }

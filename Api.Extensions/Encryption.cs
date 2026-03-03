@@ -10,7 +10,7 @@ namespace Api.Extensions
         //128 BIT key
         const string key = "&5hU84$3cretK3Y*";
 
-        public static string Encrypt(this string plainText)
+        public static string Encrypt(this string plainText, string pkey = null)
         {
             try
             {
@@ -20,8 +20,10 @@ namespace Api.Extensions
                 bool hex = true;
                 byte[] valueBytes = Encoding.UTF8.GetBytes(plainText);
                 byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+                if(!string.IsNullOrEmpty(pkey))
+					keyBytes = Encoding.UTF8.GetBytes(pkey);
 
-                using var aes = Aes.Create();
+				using var aes = Aes.Create();
                 aes.Key = keyBytes;
                 aes.Mode = CipherMode.ECB;
                 aes.Padding = PaddingMode.PKCS7;
@@ -36,7 +38,7 @@ namespace Api.Extensions
             }
         }
 
-        public static string Decrypt(this string cipherText)
+        public static string Decrypt(this string cipherText, string pkey = null)
         {
             try
             {
@@ -46,6 +48,10 @@ namespace Api.Extensions
                 bool hex = true;
                 byte[] valueBytes = hex ? Convert.FromHexString(cipherText) : Convert.FromBase64String(cipherText);
                 byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+                if (!string.IsNullOrEmpty(pkey))
+                {
+					keyBytes = Encoding.UTF8.GetBytes(pkey);
+				}
 
                 using var aes = Aes.Create();
                 aes.Key = keyBytes;

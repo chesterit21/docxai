@@ -5,15 +5,17 @@ using Api.Domain.Constants;
 using Api.Domain.EntityRequests;
 using Api.Domain.EntityRequests.Dms;
 using Api.Domain.EntityRequests.Masters;
+using Api.Domain.EntityResponses.Dms;
 using Api.Extensions;
 using Api.Repository.Masters;
 using Microsoft.AspNetCore.Http;
+using NetTopologySuite.Index.HPRtree;
 
 namespace Api.Services.Masters
 {
 	public class DocumentSharedService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IDocumentSharedRepository repository) : BaseService(accessor, languageRepository)
 	{
-		public async Task<object> GetAll(ReqestFilter request)
+		public async Task<object> GetAll(RequestFilter request)
 		{
 			await ValidateInputRequestAsync(request);
 
@@ -39,21 +41,12 @@ namespace Api.Services.Masters
 			return await repository.GetAsync(page, limit);
 		}
 
-		public async Task<List<DocumentShared>> Upsert(List<RequestDocumentShared> request)
-		{
-			await ValidateInputRequestAsync(request);
-
-			var entities = request.CopyProperties<List<DocumentShared>>();
-			entities = entities.DistinctBy(x => x.Id).ToList();
-
-			return await repository.UpsertManyAsync(entities);
-		}
 
 		public async Task<DocumentShared> Insert(RequestDocumentShared request)
 		{
 			await ValidateInputRequestAsync(request);
 
-			await CheckIfExist(request.Id);
+			await CheckIfExist(request.DocumentID);
 
 			var entity = request.CopyProperties<DocumentShared>();
 
@@ -66,38 +59,13 @@ namespace Api.Services.Masters
 		{
 			await ValidateInputRequestAsync(request);
 
-			await CheckIfExist(request.Id);
+			await CheckIfExist(request.DocumentID);
 
 			var entity = request.CopyProperties<DocumentShared>();
 
 			await repository.LogTransactionAndAuditTrail($"Update existing Request Document Shared with id {entity.Id}", Domain.Attributes.UserAction.Update, entity);
 
 			return await repository.UpdateAsync(entity);
-		}
-
-		public async Task<DocumentShared> SoftDelete(int id)
-		{
-			await ValidateInputAsync(id);
-			await CheckIfExist(id);
-
-			var entity = new DocumentShared { Id = id };
-
-			await repository.LogTransactionAndAuditTrail($"Soft delete existing Document Shared with id {id}", Domain.Attributes.UserAction.Update, entity);
-
-			return await repository.MarkAsDeletedAsync(entity);
-		}
-
-		public async Task<DocumentShared> SoftUndelete(int id)
-		{
-			await ValidateInputAsync(id);
-
-			await CheckIfExist(id);
-
-			var entity = new DocumentShared { Id = id };
-
-			await repository.LogTransactionAndAuditTrail($"Soft undelete existing Document Shared with id {id}", Domain.Attributes.UserAction.Update, entity);
-
-			return await repository.MarkAsNotDeletedAsync(entity);
 		}
 
 		private async Task CheckIfExist(int id)
@@ -108,6 +76,22 @@ namespace Api.Services.Masters
 				var message = await GetMessage(LangCodes.NotFound);
 				throw new ApiException($"{message}. Id {id}");
 			}
+		}
+
+        public async Task<int> InsertDocumentShare(RequestDocumentShared request)
+        {
+            await ValidateInputRequestAsync(request);
+            await CheckIfExist(request.DocumentID);
+            //await repository.LogTransactionAndAuditTrail($"Insert new Document Shared", Domain.Attributes.UserAction.Insert, entity);
+            return await repository.UpsertDocumentSharePrivillege(request);
+        }
+
+		public async Task<List<ResponseUserPrivillege>> GetListSharedByDocId(int Documentid)
+		{
+			await ValidateInputAsync(Documentid);
+			//await repository.LogTransactionAndAuditTrail($"Insert new Document Shared", Domain.Attributes.UserAction.Insert, entity);
+			var documentShared = await repository.GetSharedUsersByDocumentIDAsync(Documentid);
+			return documentShared.SharedUser;
 		}
 	}
 }

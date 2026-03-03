@@ -62,7 +62,7 @@ namespace Api.Repository.Masters
                 })
             .ToList();
 
-            var role = await context.Role.FirstOrDefaultAsync(x => x.RoleId == roleId);
+            var role = await context.Group.FirstOrDefaultAsync(x => x.RoleId == roleId);
             var menus = await context.Menu.ToListAsync();
             var roleMenus = await context.RoleMatrix.Where(x => x.RoleId == roleId).ToListAsync();
 
@@ -99,7 +99,7 @@ namespace Api.Repository.Masters
                 matrix => matrix.MenuId,
                 (menu, matrix) => new { menu, matrix })
             .LeftJoin(
-                context.Role,
+                context.Group,
                 temp => temp.matrix != null ? temp.matrix.RoleId : (Guid?)null,  // Ensure null safety
                 role => role.RoleId,
                 (temp, role) => new
@@ -126,7 +126,7 @@ namespace Api.Repository.Masters
                 x => x.matrixes.DefaultIfEmpty(),
                 (x, matrix) => new { x.menu, matrix })
             .GroupJoin(
-                context.Role,
+                context.Group,
                 x => x.matrix != null ? x.matrix.RoleId : (Guid?)null,  // Check for null
                 role => role.RoleId,
                 (x, roles) => new { x.menu, x.matrix, roles })

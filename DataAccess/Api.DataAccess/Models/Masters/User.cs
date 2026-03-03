@@ -2,12 +2,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Api.DataAccess.Models.Dms;
 
 namespace Api.DataAccess.Models.Masters
 {
     [Table("TblMsUser")]
     [PrimaryKey(nameof(UserId))]
-    public class User : BaseEntityDefault, IEquatable<User>
+    public class User : BaseEntitySoftDelete, IEquatable<User>
     {
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -17,7 +18,7 @@ namespace Api.DataAccess.Models.Masters
         [Column(TypeName = "varchar(50)")]
         public string UserName { get; set; }
 
-        [Required]
+        //[Required]
         [Column(TypeName = "varchar(15)")]
         public string CompanyId { get; set; }
 
@@ -29,7 +30,11 @@ namespace Api.DataAccess.Models.Masters
         [Column(TypeName = "varchar(150)")]
         public string EmailAddress { get; set; }
 
-        [Column(TypeName = "varchar(64)")]
+		[Required]
+		[Column(TypeName = "varchar(18)")]
+		public string PhoneNumber { get; set; }
+
+		[Column(TypeName = "text")]
         [JsonIgnore]
         //[DataType(DataType.Text)]
         public string UserPassword { get; set; }
@@ -42,7 +47,15 @@ namespace Api.DataAccess.Models.Masters
 
         public DateTime? LastLogin { get; set; }
 
-        [ForeignKey(nameof(CompanyId))]
+		[Required]
+		public bool IsAdmin { get; set; }
+
+		[Required]
+		public string UserType { get; set; }
+
+        public int? UserStatus { get; set; } // Enum: Api.Domain.Enum.UserStatus
+
+		[ForeignKey(nameof(CompanyId))]
         public virtual Company Company { get; set; }
 
         [JsonIgnore]
@@ -55,7 +68,17 @@ namespace Api.DataAccess.Models.Masters
         //[JsonPropertyName("Roles")]
         public virtual ICollection<UserRole> UserRoles { get; set; }
 
-        public bool Equals(User other)
+        [JsonIgnore]
+        public virtual ICollection<CategoriesShared> CategoriesShared { get; set; }
+
+		[JsonIgnore]
+		public virtual UserMedia UserMedia { get; set; }
+
+		[JsonIgnore]
+		//[JsonPropertyName("Roles")]
+		public virtual ICollection<UserGroup> UserGroup { get; set; }
+
+		public bool Equals(User other)
         {
             return UserId.Equals(other?.UserId);
         }

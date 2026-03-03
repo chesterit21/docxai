@@ -9,8 +9,9 @@
     using Microsoft.AspNetCore.Mvc;
     using System.ComponentModel;
 
+    [ApiExplorerSettings(IgnoreApi = true)]
     [DisplayName("Privilege User - User Menu | Matrix")]
-    [Menu("MnMsUserPriv")]
+    [Menu("MnUserGroup")]
     [Route("[controller]")]
     [ApiController]
     public class UserMatrixController(UserMatrixService service) : ControllerBase
@@ -25,7 +26,7 @@
 
         [UserAction(UserAction.Read)]
         [HttpGet("filter")]
-        public async Task<IActionResult> GetFIlter([FromQuery] ReqestFilter filter)
+        public async Task<IActionResult> GetFIlter([FromQuery] RequestFilter filter)
         {
             var result = await service.GetAll(filter);
             return ResultFactory.Create(result);

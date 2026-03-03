@@ -1,92 +1,158 @@
-﻿using Api.DataAccess.Models.Systems;
+﻿using Api.DataAccess;
+using Api.DataAccess.Models.Systems;
 using Api.Extensions;
 using Api.Repository.Systems;
+using Api.Services.Systems;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NPOI.SS.Formula.Functions;
+using System;
 using System.Text.Json;
 
 namespace Api.Services
 {
-    public class EmailBackgroundWorker(IServiceProvider serviceProvider, ILogger<EmailBackgroundWorker> logger) : BackgroundService
+    public class EmailBackgroundWorker(IServiceProvider serviceProvider, ILogger<EmailBackgroundWorker> logger,
+		IDatabaseGuard _dbGuard) : BackgroundService
     {
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            Process(stoppingToken);
-            return Task.CompletedTask;
-        }
 
-        private async void Process(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                int userId = 0;
-                try
-                {
-                    using var scope = serviceProvider.CreateScope();
-                    var repository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
-                    var mails = await repository.GetAsync(x => x.SentStatus != 1);
+		// Poll interval when no work
+		private static readonly TimeSpan IdleDelay = TimeSpan.FromMinutes(1);
+		// Delay between sending emails to respondents
+		private static readonly TimeSpan PerEmailDelay = TimeSpan.FromSeconds(3);
 
-                    if (mails.Count == 0)
-                        continue;
+		protected override Task ExecuteAsync(CancellationToken stoppingToken)
+		{
+			return ProcessAsync(stoppingToken);
+		}
 
-                    var processedEmails = new List<Email>();
+		private async Task ProcessAsync(CancellationToken stoppingToken)
+		{
+			logger.LogInformation("EmailBackgroundWorker started...");
+			while (!stoppingToken.IsCancellationRequested)
+			{
+				if (await _dbGuard.IsReadyAsync(stoppingToken))
+				{
+					logger.LogInformation("Database is ready. Starting Email background processing...");
+					break; // Exit the "waiting" loop
+				}
 
-                    foreach (var mail in mails)
-                    {
-                        try
-                        {
-                            userId = mail.InsertedBy;
+				logger.LogWarning("Database not ready or config missing. Retrying in 10 seconds...");
+				await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+			}
 
-                            var emailService = new MailServiceBuilder()
-                            .Subject(mail.Subject)
-                            .Body(mail.Body, mail.IsHtml)
-                            .AddRecipient(mail.To)
-                            .AddCc(mail.Cc)
-                            .Build();
+			while (!stoppingToken.IsCancellationRequested)
+			{
+				try
+				{
+					using var scope = serviceProvider.CreateScope();
+					//var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+					//var data = await db.Email.ToListAsync()
 
-                            var response = emailService.Send();
-                            mail.StatusMessage = response;
-                            mail.SentStatus = response.StartsWith("OK") ? 1 : 0;
-                            processedEmails.Add(mail);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex.GetExceptionMessages());
+					var repository = scope.ServiceProvider.GetRequiredService<IEmailRepository>();
+					var mails = await repository.GetAsync(x => x.SentStatus != 1);
 
-                            var type = "Internal Server Error";
-                            if (ex.Message.Contains("No Such User Here", StringComparison.OrdinalIgnoreCase))
-                            {
-                                type = "Bad Request";
-                                mail.SentStatus = 2;
-                            }
-                            else
-                            {
-                                mail.SentStatus = 3;
-                            }
+					if (mails == null || mails.Count == 0)
+					{
+						await Task.Delay(IdleDelay, stoppingToken);
+						continue;
+					}
 
-                            processedEmails.Add(mail);
+					foreach (var mail in mails)
+					{
+						if (stoppingToken.IsCancellationRequested)
+							break;
 
-                            await InsertLog(ex, type, JsonSerializer.Serialize(mail), mail.InsertedBy);
-                        }
-                    }
+						try
+						{
+							var emailService = new MailServiceBuilder()
+								.Subject(mail.Subject)
+								.Body(mail.Body, mail.IsHtml)
+								.AddRecipient(mail.To)
+								.AddCc(mail.Cc)
+								.Build();
 
-                    await repository.UpdateManyAsync(processedEmails);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex.Message);
+							string response = await Task.Run(() => emailService.Send(), stoppingToken);
 
-                    await InsertLog(ex, "Internal Server Error", null, 0);
-                }
-                finally
-                {
-                    await Task.Delay(10000, stoppingToken);
-                }
-            }
-        }
+							mail.StatusMessage = response;
+							mail.SentStatus = response != null && response.StartsWith("OK", StringComparison.OrdinalIgnoreCase) ? 1 : 2;
+						}
+						catch (Exception ex)
+						{
+							logger.LogError(ex, "Failed to send email to {To}", mail?.To);
 
-        private async Task InsertLog(Exception ex, string type, string parameter, int userId)
+							var type = "Internal Server Error";
+							if (ex.Message.Contains("No Such User Here", StringComparison.OrdinalIgnoreCase))
+							{
+								type = "Bad Request";
+								mail.SentStatus = 3; // invalid recipient
+							}
+							else
+							{
+								mail.SentStatus = 2; // failed
+								var msg = ex.Message;
+								if (!string.IsNullOrEmpty(msg) && msg.Length > 1000)
+									msg = msg.Substring(0, 1000);
+								mail.StatusMessage = msg;
+							}
+						}
+
+						try
+						{
+							await repository.UpdateAsync(mail);
+						}
+						catch (Exception uex)
+						{
+							// Log and continue — do not fail the whole loop because of DB issue for one email
+							logger.LogError(uex, "Failed to update email status for {Id}", mail?.Id);
+						}
+
+						// Wait between sending emails to avoid rapid-fire
+						try
+						{
+							await Task.Delay(PerEmailDelay, stoppingToken);
+						}
+						catch (TaskCanceledException)
+						{
+							break;
+						}
+					}
+				}
+				catch (OperationCanceledException)
+				{
+					break;
+				}
+				catch(ArgumentException ex)
+				{
+					logger.LogError(ex, "Background email worker error: {Message}", ex.GetExceptionMessages());
+					//break;					
+				}
+				catch (Exception ex)
+				{
+					// Log and continue after idle delay (avoid tight exception loop)
+					logger.LogError(ex, "Background email worker error: {Message}", ex.GetExceptionMessages());
+					if (await _dbGuard.IsReadyAsync(stoppingToken))
+					{
+						await InsertLog(ex, "Internal Server Error", null, 0);
+					}
+				}
+
+				// small pause before next polling cycle (if not cancelled)
+				try
+				{
+					await Task.Delay(IdleDelay, stoppingToken);
+				}
+				catch (TaskCanceledException)
+				{
+					break;
+				}
+			}
+		}
+		
+		private async Task InsertLog(Exception ex, string type, string parameter, int userId)
         {
             var error = new ApplicationLog
             {
@@ -105,5 +171,7 @@ namespace Api.Services
             await log.InsertAsync(error);
             logger.LogError(ex.GetExceptionMessages());
         }
+
+
     }
 }

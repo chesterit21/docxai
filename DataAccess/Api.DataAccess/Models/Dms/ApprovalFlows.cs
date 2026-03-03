@@ -1,39 +1,42 @@
 ﻿using Api.DataAccess.Models.Masters;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.RegularExpressions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Api.DataAccess.Models.Dms
 {
-	[Table("ApprovalFlows")]
-	public class ApprovalFlows : BaseEntityDefault
+    [Table("TblApprovalFlows")]
+    public class ApprovalFlows : BaseEntitySoftDelete
 	{
-		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-		public int Id { get; set; }
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
-		[Required]
+        [Required]
 		public int ApprovalID { get; set; }
 
+		[JsonIgnore]
 		[ForeignKey(nameof(ApprovalID))]
 		public virtual Approvals Approvals { get; set; }
 
-		public string Step { get; set; }
+		public int Step { get; set; }
+		public bool IsFinalStep { get; set; }
 
-		public string MaxStep { get; set; }
-		
 		[Required]
-		public int UserID { get; set; }
+		public int ApproverUserID { get; set; }
 
-		[ForeignKey(nameof(UserID))]
+		[ForeignKey(nameof(ApproverUserID))]
 		public virtual User User { get; set; }
 		
-		[Required]
-		public int RoleID { get; set; }
+		//[Required]
+		//public int RoleID { get; set; }
 
-		[ForeignKey(nameof(RoleID))]
-		public virtual Role Role { get; set; }
+		//[ForeignKey(nameof(RoleID))]
+		//public virtual Group Role { get; set; }
 
-
-		
-	}
+        //[ForeignKey(nameof(CategoryID))]
+        //public virtual Categories Categories { get; set; }
+        //[ForeignKey(nameof(DocumentIDs))]
+        //public virtual Documents Documents { get; set; }
+    }
 }

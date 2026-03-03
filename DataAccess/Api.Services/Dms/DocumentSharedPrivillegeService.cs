@@ -13,7 +13,7 @@ namespace Api.Services.Masters
 {
 	public class DocumentSharedPrivillegeService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IDocumentSharedPrivillegeRepository repository) : BaseService(accessor, languageRepository)
 	{
-		public async Task<object> GetAll(ReqestFilter request)
+		public async Task<object> GetAll(RequestFilter request)
 		{
 			await ValidateInputRequestAsync(request);
 

@@ -1,0 +1,19 @@
+.ant-tabs-tab .ant-tabs-tab-active {
+    border-top: 4px solid salmon;
+    padding: 1000px !important;
+}
+
+.ant-tabs-card >.ant-tabs-nav .ant-tabs-tab-active {
+    color: #1677ff ;
+    border-top: 4px solid #1677ff;
+    
+}
+.ant-tabs-card >.ant-tabs-nav {
+    height: 43px;
+    
+}
+
+.deleted-row {
+  background-color: #ffe6e6 !important;
+  color: red;
+}

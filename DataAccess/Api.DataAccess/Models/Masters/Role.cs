@@ -9,7 +9,6 @@ namespace Api.DataAccess.Models.Masters
     [PrimaryKey(nameof(RoleId))]
     public class Role : BaseEntityDefault, IEquatable<Role>
     {
-        [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int RoleId { get; set; }
 
@@ -17,7 +16,10 @@ namespace Api.DataAccess.Models.Masters
         [Column(TypeName = "varchar(100)")]
         public string Name { get; set; }
 
-        [JsonIgnore]
+		[Column(TypeName = "varchar(100)")]
+		public string Description { get; set; }
+
+		[JsonIgnore]
         public virtual ICollection<UserRole> UserRoles { get; set; }
 
         [JsonIgnore]

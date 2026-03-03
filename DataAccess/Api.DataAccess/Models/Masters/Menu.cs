@@ -10,9 +10,8 @@ namespace Api.DataAccess.Models.Masters
     [PrimaryKey(nameof(MenuId))]
     public class Menu : BaseEntityDefault, IEquatable<Menu>
     {
-        [Required]
         [Column(TypeName = "varchar(30)")]
-        public required string MenuId { get; set; }
+        public string MenuId { get; set; }
 
         [Column(TypeName = "varchar(30)")]
         public string ParentMenuId { get; set; }

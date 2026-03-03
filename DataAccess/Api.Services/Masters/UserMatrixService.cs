@@ -21,7 +21,7 @@ namespace Api.Services.Masters
         IRoleMatrixRepository roleMatrixRepository,
         ILanguageRepository languageRepository) : BaseService(accessor, languageRepository)
     {
-        public async Task<object> GetAll(ReqestFilter request)
+        public async Task<object> GetAll(RequestFilter request)
         {
             await ValidateInputRequestAsync(request);
             var result = await userMatrixRepository.GetAsync(null, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);
@@ -112,7 +112,7 @@ namespace Api.Services.Masters
             {
                 IsADUser = user.IsADUser,
                 CompanyId = user.CompanyId,
-                CompanyName = user.Company.Name,
+                //CompanyName = user.Company.Name,
                 UserId = user.UserId,
                 UserName = user.UserName,
                 EmailVerified = user.EmailVerified,
@@ -170,7 +170,7 @@ namespace Api.Services.Masters
             {
                 IsADUser = user.IsADUser,
                 CompanyId = user.CompanyId,
-                CompanyName = user.Company.Name,
+                //CompanyName = user.Company.Name,
                 UserId = user.UserId,
                 UserName = user.UserName,
                 EmailVerified = user.EmailVerified,

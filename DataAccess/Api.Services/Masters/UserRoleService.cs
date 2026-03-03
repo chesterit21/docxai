@@ -11,7 +11,7 @@ namespace Api.Services.Masters
 {
     public class UserRoleService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IRoleRepository roleRepository, IUserRoleRepository userRoleRepository) : BaseService(accessor, languageRepository)
     {
-        public async Task<object> GetAll(ReqestFilter request)
+        public async Task<object> GetAll(RequestFilter request)
         {
             await ValidateInputRequestAsync(request);
             var result = await userRoleRepository.GetAsync(null, request.Page, request.Limit, request.SortBy, request.SortOrientation, request.FilterBy, request.FilterValue);

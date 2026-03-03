@@ -1,0 +1,66 @@
+.processing-docs-container {
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(24, 144, 255, 0.05);
+    border-radius: 8px;
+    border: 1px dashed #1890ff;
+}
+
+.processing-doc-item {
+    margin-bottom: 12px;
+}
+
+.processing-doc-item:last-child {
+    margin-bottom: 0;
+}
+
+.processing-doc-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.processing-doc-name {
+    font-weight: 500;
+    color: #262626;
+}
+
+.processing-doc-status {
+    color: #8c8c8c;
+    font-style: italic;
+}
+
+.processing-doc-progress-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.processing-doc-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1890ff, #52c41a);
+    transition: width 0.3s ease;
+}
+
+.processing-doc-message {
+    font-size: 11px;
+    color: #595959;
+    margin-top: 4px;
+}
+
+.system_message_fake {
+    border_left: 4px solid #1890ff;
+    background: #f0f5ff !important;
+}
+
+.status-failed {
+    color: #ff4d4f !important;
+    font-weight: bold;
+}
+
+.message-failed {
+    color: #cf1322 !important;
+}

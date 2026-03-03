@@ -113,7 +113,7 @@ namespace Api.DataAccess
 
     public class BaseEntityUpdate : BaseEntity
     {
-        public int UpdatedBy { get; set; } = 0;
+        public int? UpdatedBy { get; set; } = 0;
 
         [Column(TypeName = "timestamp")]
         public DateTime UpdatedAt { get; set; }
@@ -123,5 +123,16 @@ namespace Api.DataAccess
     {
         public bool IsActive { get; set; } = true;
     }
+
+
+	public class BaseEntitySoftDelete : BaseEntityDefault
+	{
+		[Column(TypeName = "boolean")]
+		public bool IsDeleted { get; set; } = false;
+		[Column(TypeName = "varchar(50)")]
+		public int? DeletedBy { get; set; }
+		//[Column(TypeName = "timestamp with time zone")]
+		public DateTime? DeletedAt { get; set; }
+	}
 
 }

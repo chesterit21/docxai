@@ -1,4 +1,5 @@
 ﻿using Api.Domain.EntityRequests;
+using Api.Domain.EntityRequests.Systems;
 using Api.Domain.EntityResponses;
 using Api.Domain.EntityResponses.Systems;
 using Api.Repository.Masters;
@@ -39,7 +40,7 @@ namespace Api.Services.Systems
             };
         }
 
-        public async Task<ResponsePagination> Get(ReqestFilter request)
+        public async Task<ResponsePagination> Get(RequestFilter request)
         {
             await ValidateInputRequestAsync(request);
             await ValidateInputDateRangeAsync(request.StartDate.Value, request.EndDate.Value);
@@ -68,5 +69,35 @@ namespace Api.Services.Systems
                 Data = data
             };
         }
-    }
+
+		public async Task<ResponsePagination> GetByTransactionLogID(RequestAuditTrailLogsPagination request)
+		{
+			await ValidateInputRequestAsync(request);
+			//await ValidateInputDateRangeAsync(request.StartDate.Value, request.EndDate.Value);
+			Guid guid = Guid.Parse(request.LogTransationID);
+			var totalRecords = await repository.CountAsync(x => x.TransactionLogId == guid);
+			var records = await repository.GetAsync(x => x.TransactionLogId == guid, request.Page, request.Limit);
+
+			var data = records.Select(x => new ResponseAuditTrail
+			{
+				Id = x.Id,
+				TransactionLogId = x.TransactionLogId,
+				TableName = x.TableName,
+				Command = x.Command,
+				Before = x.Before == null ? null : JsonSerializer.Deserialize<JsonDocument>(x.Before.ToString()),
+				After = x.After == null ? null : JsonSerializer.Deserialize<JsonDocument>(x.After.ToString()),
+				InsertedBy = x.InsertedBy,
+				InsertedAt = x.InsertedAt,
+				InsertedByUserName = x.InsertedByUserName,
+				InsertedByFullName = x.InsertedByFullName
+			});
+
+			return new ResponsePagination
+			{
+				TotalRecords = totalRecords,
+				TotalPages = GetTotalPages(totalRecords, request.Limit),
+				Data = data
+			};
+		}
+	}
 }

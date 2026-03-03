@@ -116,13 +116,22 @@ namespace Api.Extensions
             if (password.Length < 8 || password.Length > 24)
                 return (false, "pass-length");
 
-            if (password.Count(char.IsDigit) < 2)
+            if (password.Count(char.IsDigit) < 1)//2
                 return (false, "pass-number");
 
-            if (password.Count(char.IsUpper) < 2)
+            if (password.Count(char.IsUpper) < 1)//2
                 return (false, "pass-upper-case");
 
-            var repeatCount = 0;
+			if (password.Count(char.IsLower) < 1)
+				return (false, "pass-lower-case");
+
+			if (password.Count(c => "!@#$%^&*()_+[]{}|;:,.<>?`~".Contains(c)) < 1)
+				return (false, "pass-special-char");
+
+			if (password.Any(char.IsWhiteSpace))
+				return (false, "pass-whitespace");
+
+			var repeatCount = 0;
             var lastChar = '\0';
             foreach (var c in password)
             {

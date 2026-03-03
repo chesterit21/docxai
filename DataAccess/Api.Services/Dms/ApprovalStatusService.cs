@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace Api.Services.Masters
 {
-	public class ApprovalStatusService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IApprovalStatusRepository repository) : BaseService(accessor, languageRepository)
+	public class ApprovalActivityService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IApprovalActivityRepository repository) : BaseService(accessor, languageRepository)
 	{
-		public async Task<object> GetAll(ReqestFilter request)
+		public async Task<object> GetAll(RequestFilter request)
 		{
 			await ValidateInputRequestAsync(request);
 
@@ -21,7 +21,7 @@ namespace Api.Services.Masters
 			return ObjectFlatter.Flatten(result);
 		}
 
-		public async Task<ApprovalStatus> Get(int Id)
+		public async Task<ApprovalActivities> Get(int Id)
 		{
 			await ValidateInputAsync(Id);
 
@@ -30,7 +30,7 @@ namespace Api.Services.Masters
 			return await repository.GetSingleAsync(x => x.Id == Id);
 		}
 
-		public async Task<List<ApprovalStatus>> GetAll(int page, int limit)
+		public async Task<List<ApprovalActivities>> GetAll(int page, int limit)
 		{
 			await ValidateInputAsync([page, limit]);
 
@@ -39,61 +39,61 @@ namespace Api.Services.Masters
 			return await repository.GetAsync(page, limit);
 		}
 
-		public async Task<List<ApprovalStatus>> Upsert(List<RequestApprovalStatus> request)
+		public async Task<List<ApprovalActivities>> Upsert(List<RequestApprovalActivities> request)
 		{
 			await ValidateInputRequestAsync(request);
 
-			var entities = request.CopyProperties<List<ApprovalStatus>>();
+			var entities = request.CopyProperties<List<ApprovalActivities>>();
 			entities = entities.DistinctBy(x => x.Id).ToList();
 
 			return await repository.UpsertManyAsync(entities);
 		}
 
-		public async Task<ApprovalStatus> Insert(RequestApprovalStatus request)
+		public async Task<ApprovalActivities> Insert(RequestApprovalActivities request)
 		{
 			await ValidateInputRequestAsync(request);
 
-			await CheckIfExist(request.Id);
+			//await CheckIfExist(request.Id);
 
-			var entity = request.CopyProperties<ApprovalStatus>();
+			var entity = request.CopyProperties<ApprovalActivities>();
 
 			await repository.LogTransactionAndAuditTrail($"Insert new Approval Status", Domain.Attributes.UserAction.Insert, entity);
 
 			return await repository.InsertAsync(entity);
 		}
 
-		public async Task<ApprovalStatus> Update(RequestApprovalStatus request)
+		public async Task<ApprovalActivities> Update(RequestUpdateApprovalActivities request)
 		{
 			await ValidateInputRequestAsync(request);
 
 			await CheckIfExist(request.Id);
 
-			var entity = request.CopyProperties<ApprovalStatus>();
+			var entity = request.CopyProperties<ApprovalActivities>();
 
 			await repository.LogTransactionAndAuditTrail($"Update existing Request Approval with id {entity.Id}", Domain.Attributes.UserAction.Update, entity);
 
 			return await repository.UpdateAsync(entity);
 		}
 
-		public async Task<ApprovalStatus> SoftDelete(int id)
+		public async Task<ApprovalActivities> SoftDelete(int id)
 		{
 			await ValidateInputAsync(id);
 			await CheckIfExist(id);
 
-			var entity = new ApprovalStatus { Id = id };
+			var entity = new ApprovalActivities { Id = id };
 
 			await repository.LogTransactionAndAuditTrail($"Soft delete existing Approval Status with id {id}", Domain.Attributes.UserAction.Update, entity);
 
 			return await repository.MarkAsDeletedAsync(entity);
 		}
 
-		public async Task<ApprovalStatus> SoftUndelete(int id)
+		public async Task<ApprovalActivities> SoftUndelete(int id)
 		{
 			await ValidateInputAsync(id);
 
 			await CheckIfExist(id);
 
-			var entity = new ApprovalStatus { Id = id };
+			var entity = new ApprovalActivities { Id = id };
 
 			await repository.LogTransactionAndAuditTrail($"Soft undelete existing Approval Status with id {id}", Domain.Attributes.UserAction.Update, entity);
 

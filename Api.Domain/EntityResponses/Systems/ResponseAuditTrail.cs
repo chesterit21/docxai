@@ -14,8 +14,8 @@
 
         public object After { get; set; }
 
-        public DateTime? InsertedAt { get; set; }
+        public DateTime InsertedAt { get; set; }
 
-        public int? InsertedBy { get; set; }
+        public int InsertedBy { get; set; }
     }
 }

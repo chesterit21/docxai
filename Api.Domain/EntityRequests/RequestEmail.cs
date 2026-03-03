@@ -19,4 +19,11 @@ namespace Api.Domain.EntityRequests
         [Required]
         public bool IsHtml { get; set; } = false;
     }
+
+	public class RequestResendMultiEmail
+	{
+		[Required]
+		public List<Guid> Ids { get; set; }
+
+	}
 }

@@ -2,7 +2,14 @@
 
 namespace Api.Domain.EntityRequests.Masters
 {
-    public class RequestUserRoleDelete
+	public class RequestUserList : RequestPagination
+	{
+		public string Username { get; set; }
+
+		public string Fname { get; set; }
+	}
+
+	public class RequestUserRoleDelete
     {
         [Required]
         public int RoleId { get; set; }

@@ -16,7 +16,7 @@ namespace tauxunit
             var repo = MockInstance.GetRepositoryInstances(context);
             var service = repo.UserService;
 
-            var admnistrator = 1;
+            int admnistrator = 1;
 
             await service.Create(new RequestUserCreate
             {
@@ -25,7 +25,7 @@ namespace tauxunit
                 FullName = "Admin Taufiq",
                 //Password = "P@ssW0rd123", //P@ssw0rd
                 CompanyId = "shuba",
-                Roles = [admnistrator]
+                Groups = [admnistrator]
             });
 
             var user = await service.GetUser("taadmin");

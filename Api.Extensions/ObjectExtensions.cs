@@ -192,5 +192,46 @@ namespace Api.Extensions
                 return null;
             }
         }
+
+
+        /// <summary>
+        /// Copies matching properties with the same type from the source object to the destination object.
+        /// Only properties with public getters and setters are copied.
+        /// </summary>
+        /// <typeparam name="TSource">Source object type</typeparam>
+        /// <typeparam name="TDestination">Destination object type</typeparam>
+        /// <param name="destination">The destination object where properties are copied to</param>
+        /// <param name="source">The source object from which properties are copied</param>
+        public static void CopyPropertiesFrom<TSource, TDestination>(this TDestination destination, TSource source)
+            where TSource : notnull
+            where TDestination : notnull
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (destination == null)
+                throw new ArgumentNullException(nameof(destination));
+
+            var sourceProperties = typeof(TSource).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var destinationProperties = typeof(TDestination).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var destProp in destinationProperties)
+            {
+                if (!destProp.CanWrite)
+                    continue;
+
+                var sourceProp = Array.Find(sourceProperties, sp =>
+                    sp.Name == destProp.Name &&
+                    sp.PropertyType == destProp.PropertyType &&
+                    sp.CanRead);
+
+                if (sourceProp != null)
+                {
+                    var value = sourceProp.GetValue(source);
+                    destProp.SetValue(destination, value);
+                }
+            }
+        }
+
+
     }
 }

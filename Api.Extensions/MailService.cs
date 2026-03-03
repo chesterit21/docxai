@@ -47,7 +47,7 @@ namespace Api.Extensions
                 {
                     foreach (var mail2 in mail.Split(';'))
                     {
-                        to.Add(mail);
+                        to.Add(mail2);
                     }
                 }
                 else
@@ -66,11 +66,14 @@ namespace Api.Extensions
             {
                 foreach (var mail in email)
                 {
+                    if (string.IsNullOrEmpty(mail))
+                        continue;
+
                     if (mail.Contains(';'))
                     {
                         foreach (var mail2 in mail.Split(';'))
                         {
-                            cc.Add(mail);
+                            cc.Add(mail2);
                         }
                     }
                     else
@@ -128,11 +131,11 @@ namespace Api.Extensions
 
             JsonElement doc = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText("appsettings.json"));
 
-            var mailName = doc.GetElement("Email.Name").GetString();
-            var mailUser = doc.GetElement("Email.User").GetString();
-            var mailSmtp = doc.GetElement("Email.Smtp").GetString();
-            var mailPort = doc.GetElement("Email.Port").GetInt16();
-            var mailPass = doc.GetElement("Email.Password").GetString();
+            var mailName = doc.GetElement("MailServer.Name").GetString();
+            var mailUser = doc.GetElement("MailServer.User").GetString();
+            var mailSmtp = doc.GetElement("MailServer.Smtp").GetString();
+            var mailPort = doc.GetElement("MailServer.Port").GetInt16();
+            var mailPass = doc.GetElement("MailServer.Password").GetString();
 
             var message = new MimeMessage();
 
@@ -190,6 +193,10 @@ namespace Api.Extensions
                 client.Authenticate(mailUser, mailPass);
                 return client.Send(message);
             }
+            catch (Exception ex) 
+            {
+                return ex.Message;
+			}
             finally
             {
                 client.Disconnect(true);

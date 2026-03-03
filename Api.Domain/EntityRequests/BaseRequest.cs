@@ -17,7 +17,7 @@ namespace Api.Domain.EntityRequests
         public int Limit { get; set; }
     }
 
-    public class ReqestFilter : RequestPagination
+    public class RequestFilter : RequestPagination
     {
         [MaxLength(20)]
         public string FilterBy { get; set; }
@@ -35,4 +35,16 @@ namespace Api.Domain.EntityRequests
 
         public DateTime? EndDate { get; set; }
     }
+
+	public class RequestSystemLogsPagination : BaseRequest
+	{
+		public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
+		[Required]
+		public int Page { get; set; }
+
+		[Required]
+		public int Limit { get; set; }
+	}
 }

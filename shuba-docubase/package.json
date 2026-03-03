@@ -1,0 +1,52 @@
+{
+  "name": "docubase-fe",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "export NODE_OPTIONS=--max_old_space_size=8192 && tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "@syncfusion/ej2-react-base": "^29.2.4",
+    "@syncfusion/ej2-react-documenteditor": "^29.2.9",
+    "@syncfusion/ej2-react-pdfviewer": "^29.2.8",
+    "@syncfusion/ej2-react-spreadsheet": "^29.2.8",
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^24.0.0",
+    "antd": "^5.24.9",
+    "axios": "^1.9.0",
+    "crypto-js": "^4.2.0",
+    "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
+    "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.510.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-router-dom": "^7.5.3",
+    "recharts": "^3.5.1",
+    "tailwindcss": "^4.1.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/file-saver": "^2.0.7",
+    "@types/lodash": "^4.17.20",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5"
+  }
+}

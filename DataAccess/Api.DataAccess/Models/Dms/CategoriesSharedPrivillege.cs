@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Api.DataAccess.Models.Dms
 {
-    [Table("CategoriesSharedPrivillege")]
-    public class CategoriesSharedPrivillege : BaseEntityUpdate
+    [Table("TblCategoriesSharedPrivillege")]
+    public class XCategoriesSharedPrivillege : BaseEntityUpdate
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -21,5 +21,8 @@ namespace Api.DataAccess.Models.Dms
 
         [Column(TypeName = "boolean")]
         public bool IsDelete { get; set; }
+
+        [ForeignKey(nameof(CategoriesSharedID))]
+        public virtual CategoriesShared CategoriesShared { get; set; }
     }
 }

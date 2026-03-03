@@ -13,19 +13,20 @@ namespace Api.Extensions
     {
         static HashSet<string> SearchForGroup(LdapConnection connection, string entryPoint, string searchFilter, string[] requiredAttributes, bool typesOnly)
         {
-            var result = connection.Search(entryPoint, LdapConnection.ScopeSub, searchFilter, requiredAttributes, typesOnly);
+            var result = connection.SearchAsync(entryPoint, LdapConnection.ScopeSub, searchFilter, requiredAttributes, typesOnly).GetAwaiter().GetResult();
 
             var groups = new HashSet<string>();
-            foreach (var group in result)
+            while (result.HasMoreAsync().GetAwaiter().GetResult())
             {
-                var attribute = group.GetAttribute("cn");
+                var group = result.NextAsync().GetAwaiter().GetResult();
+                var attribute = group.GetAttributeSet().GetAttribute("cn");
                 groups.Add(attribute.StringValue);
             }
 
             return groups;
         }
 
-        public static (bool Valid, string Message) Authenticate(string username, string password)
+        public static async Task<(bool Valid, string Message)> AuthenticateAsync(string username, string password)
         {
             try
             {
@@ -44,8 +45,8 @@ namespace Api.Extensions
 
                 using var connection = new LdapConnection { SecureSocketLayer = false };
 
-                connection.Connect(address, port);
-                connection.Bind(userDn, password);
+                await connection.ConnectAsync(address, port);
+                await connection.BindAsync(userDn, password);
                 return (connection.Bound, null);
             }
             catch (Exception ex)
@@ -70,7 +71,7 @@ namespace Api.Extensions
         {
             try
             {
-                return entry.GetAttribute(attributeName)?.StringValue;
+                return entry.GetAttributeSet().GetAttribute(attributeName)?.StringValue;
             }
             catch
             {
@@ -78,7 +79,7 @@ namespace Api.Extensions
             }
         }
 
-        public static ActiveDirectoryAttribute GetUserAttribute(string username, string password)
+        public static async Task<ActiveDirectoryAttribute> GetUserAttributeAsync(string username, string password)
         {
             //string[] attributes = new string[] { "cn", "userPrincipalName", "st", "givenname", "samaccountname","description", "telephonenumber", "department", "displayname", "name", "mail", "givenName", "sn" };
 
@@ -110,53 +111,46 @@ namespace Api.Extensions
 
             using var con = new LdapConnection();
 
-            con.Connect(address, port);
-            con.Bind(loginDn, password);
+            await con.ConnectAsync(address, port);
+            await con.BindAsync(loginDn, password);
 
             if (con.Bound == false)
                 return null;
 
-            LdapSearchQueue queue = con.Search(
+            ILdapSearchResults searchResults = await con.SearchAsync(
                 searchBase,
                 LdapConnection.ScopeSub,
                 searchFilter,
                 attributes,
                 false,
-                null,
-                null);
+                (LdapSearchConstraints)null);
 
-            LdapMessage message;
-
-            while ((message = queue.GetResponse()) != null)
+            while (await searchResults.HasMoreAsync())
             {
-                if (message is LdapSearchResult)
+                var entry = await searchResults.NextAsync();
+                LdapAttributeSet attributeSet = entry.GetAttributeSet();
+
+                return new ActiveDirectoryAttribute
                 {
-                    LdapEntry entry = ((LdapSearchResult)message).Entry;
-
-                    LdapAttributeSet attributeSet = entry.GetAttributeSet();
-
-                    return new ActiveDirectoryAttribute
-                    {
-                        Cn = attributeSet.GetAttributeValue("cn"),
-                        UserPrincipalName = attributeSet.GetAttributeValue("userPrincipalName"),
-                        St = attributeSet.GetAttributeValue("st"),
-                        GivenName = attributeSet.GetAttributeValue("givenname") ?? attributeSet.GetAttributeValue("givenName"),
-                        SamAccountName = attributeSet.GetAttributeValue("samaccountname"),
-                        Description = attributeSet.GetAttributeValue("description"),
-                        TelephoneNumber = attributeSet.GetAttributeValue("telephonenumber"),
-                        Department = attributeSet.GetAttributeValue("department"),
-                        DisplayName = attributeSet.GetAttributeValue("displayname"),
-                        Name = attributeSet.GetAttributeValue("name"),
-                        Mail = attributeSet.GetAttributeValue("mail"),
-                        Sn = attributeSet.GetAttributeValue("sn")
-                    };
-                }
+                    Cn = attributeSet.GetAttributeValue("cn"),
+                    UserPrincipalName = attributeSet.GetAttributeValue("userPrincipalName"),
+                    St = attributeSet.GetAttributeValue("st"),
+                    GivenName = attributeSet.GetAttributeValue("givenname") ?? attributeSet.GetAttributeValue("givenName"),
+                    SamAccountName = attributeSet.GetAttributeValue("samaccountname"),
+                    Description = attributeSet.GetAttributeValue("description"),
+                    TelephoneNumber = attributeSet.GetAttributeValue("telephonenumber"),
+                    Department = attributeSet.GetAttributeValue("department"),
+                    DisplayName = attributeSet.GetAttributeValue("displayname"),
+                    Name = attributeSet.GetAttributeValue("name"),
+                    Mail = attributeSet.GetAttributeValue("mail"),
+                    Sn = attributeSet.GetAttributeValue("sn")
+                };
             }
 
             return null;
         }
 
-        public static bool CheckIfUserExists(string username)
+        public static async Task<bool> CheckIfUserExistsAsync(string username)
         {
             var setting = AppSettings.Read();
             var domain = setting.ActiveDirectory.Domain;
@@ -175,8 +169,8 @@ namespace Api.Extensions
 
             using (var connection = new LdapConnection())
             {
-                connection.Connect(address, port);
-                connection.Bind(loginDn, pwd);
+                await connection.ConnectAsync(address, port);
+                await connection.BindAsync(loginDn, pwd);
 
                 if (connection.Bound == false)
                     throw new InvalidCredentialException("The username or password is incorrect");
@@ -187,26 +181,26 @@ namespace Api.Extensions
 
                 // To enable referral following, use LDAPConstraints.setReferralFollowing passing TRUE to enable referrals, or FALSE(default) to disable referrals.
 
-                var searchResults = connection.Search(
+                var searchResults = await connection.SearchAsync(
                     searchBase,
                     LdapConnection.ScopeSub,
                     searchFilter,
                     null,
                     false,
-                    (LdapSearchConstraints)null);
+                    cons);
 
-                if (searchResults.HasMore())
+                if (await searchResults.HasMoreAsync())
                 {
-                    var entry = searchResults.Next();
+                    var entry = await searchResults.NextAsync();
 
-                    return entry != null && (entry.GetAttribute("sAMAccountName")?.StringValue?.Equals(username, StringComparison.OrdinalIgnoreCase) ?? false);
+                    return entry != null && (entry.GetAttributeSet().GetAttribute("sAMAccountName")?.StringValue?.Equals(username, StringComparison.OrdinalIgnoreCase) ?? false);
                 }
 
                 return false;
             }
         }
 
-        public static ActiveDirectoryAttribute QueryUser(string username)
+        public static async Task<ActiveDirectoryAttribute> QueryUserAsync(string username)
         {
             var setting = AppSettings.Read();
             var domain = setting.ActiveDirectory.Domain;
@@ -225,8 +219,8 @@ namespace Api.Extensions
 
             using var connection = new LdapConnection();
 
-            connection.Connect(address, port);
-            connection.Bind(loginDn, pwd);
+            await connection.ConnectAsync(address, port);
+            await connection.BindAsync(loginDn, pwd);
 
             if (connection.Bound == false)
                 throw new InvalidCredentialException("The username or password is incorrect");
@@ -237,17 +231,17 @@ namespace Api.Extensions
 
             // To enable referral following, use LDAPConstraints.setReferralFollowing passing TRUE to enable referrals, or FALSE(default) to disable referrals.
 
-            var searchResults = connection.Search(
+            var searchResults = await connection.SearchAsync(
                 searchBase,
                 LdapConnection.ScopeSub,
                 searchFilter,
                 null,
                 false,
-                (LdapSearchConstraints)null);
+                cons);
 
-            if (searchResults.HasMore())
+            if (await searchResults.HasMoreAsync())
             {
-                var entry = searchResults.Next();
+                var entry = await searchResults.NextAsync();
 
                 return new ActiveDirectoryAttribute
                 {

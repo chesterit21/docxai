@@ -128,9 +128,10 @@ namespace Api.DataAccess.Extensions
 
             MethodCallExpression exprGroupJoin = Expression.Call(groupJoin, outer.Expression, inner.Expression, outerKeySelector, innerKeySelector, groupJoinResultSelector);
 
-            var selectManyCollectionSelector = (Expression<Func<LeftJoinIntermediate<TOuter, TInner>, IEnumerable<TInner>>>)(t => t.ManyInners.DefaultIfEmpty());
+			var selectManyCollectionSelector = (Expression<Func<LeftJoinIntermediate<TOuter, TInner>, IEnumerable<TInner>>>)(t => t.ManyInners.DefaultIfEmpty());
+			//var selectManyCollectionSelector = (Expression<Func<LeftJoinIntermediate<TOuter, TInner>, IEnumerable<TInner>>>)(t => t.ManyInners);
 
-            ParameterExpression paramUser = resultSelector.Parameters.First();
+			ParameterExpression paramUser = resultSelector.Parameters.First();
 
             ParameterExpression paramNew = Expression.Parameter(typeof(LeftJoinIntermediate<TOuter, TInner>), "t");
             MemberExpression propExpr = Expression.Property(paramNew, "OneOuter");

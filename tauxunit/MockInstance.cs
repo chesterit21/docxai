@@ -16,6 +16,7 @@ using Api.Repository.Systems;
 using Api.Services.Masters;
 using Api.Services.Systems;
 using Api.Services.Dms;
+using Api.Extensions.Services;
 
 namespace tauxunit
 {
@@ -87,10 +88,16 @@ namespace tauxunit
             var iUserRepository = new UserRepository(dbcontext, accessor);
             var iUserRoleRepository = new UserRoleRepository(dbcontext, accessor);
             var iLanguageRepository = new LanguageRepository(dbcontext, accessor);
-            var userMatrixService = new UserMatrixService(accessor, iUserRepository, iMenuRepository, iUserRoleRepository, iUserMatrixRepository, iRoleMatrixRepository, iLanguageRepository);
+            var iApprovalRepository = new ApprovalRepository(dbcontext, accessor);
+            var iGroupREpository = new GroupRepository(dbcontext, accessor, iUserRepository);
+            var iUserGroupRepository = new UserGroupRepository(dbcontext, accessor);			
+			//c, IUserRoleRepository userRoleRepository, IRoleMatrixRepository roleMatrixRepo
+			var userMatrixService = new UserMatrixService(accessor, iUserRepository, iMenuRepository, iUserRoleRepository, iUserMatrixRepository, iRoleMatrixRepository, iLanguageRepository);
             var iCategoriyRepository = new CategoryRepository(dbcontext, accessor);
+			var licenseManager = new LicenseManager(config.Object);
+			var iMigrationJobRepository = new MigrationJobRepository(dbcontext, accessor);
 
-            return new InstanceContext
+			return new InstanceContext
             {
                 DataContext = dbcontext,
                 ICompanyRepository = iCompanyRepository,
@@ -102,19 +109,20 @@ namespace tauxunit
                 IUserMatrixRepository = iUserMatrixRepository,
                 IUserRepository = iUserRepository,
                 IUserRoleRepository = iUserRoleRepository,
+				IApprovalRepository = iApprovalRepository,
 
-                CompanyService = new CompanyService(accessor, iLanguageRepository, iCompanyRepository),
+				CompanyService = new CompanyService(accessor, iLanguageRepository, iCompanyRepository),
                 LanguageService = new LanguageService(accessor, iLanguageRepository),
-                MenuService = new MenuService(accessor, iLanguageRepository, iMenuRepository, userMatrixService),
+                //MenuService = new MenuService(accessor, iLanguageRepository, iMenuRepository, userMatrixService),
                 EmailService = new EmailService(accessor, iLanguageRepository, iEmailRepository),
                 RoleMatrixService = new RoleMatrixService(accessor, iLanguageRepository, iRoleMatrixRepository, iMenuRepository, iRoleRepository),
                 RoleService = new RoleService(accessor, iLanguageRepository, iRoleRepository),
                 UserCompanyService = new UserCompanyService(accessor, iLanguageRepository, iUserCompanyRepository),
                 UserMatrixService = new UserMatrixService(accessor, iUserRepository, iMenuRepository, iUserRoleRepository, iUserMatrixRepository, iRoleMatrixRepository, iLanguageRepository),
                 UserRoleService = new UserRoleService(accessor, iLanguageRepository, iRoleRepository, iUserRoleRepository),
-                UserService = new UserService(accessor, iLanguageRepository, iCompanyRepository, iUserRepository, iRoleRepository, iUserRoleRepository, iUserCompanyRepository),
-                SettingService = new SettingService(accessor, config.Object, new LanguageService(accessor, iLanguageRepository)),
-                CategoryService = new CategoriesService(accessor,iLanguageRepository,iCategoriyRepository)
+                UserService = new UserService(accessor, iLanguageRepository, iCompanyRepository, iUserRepository, iRoleRepository, iUserRoleRepository, iUserCompanyRepository, iGroupREpository, iUserGroupRepository, iEmailRepository, licenseManager),
+                SettingService = new SettingService(accessor, config.Object, new LanguageService(accessor, iLanguageRepository), iUserRepository, iMigrationJobRepository),
+                CategoryService = new CategoriesService(accessor,iLanguageRepository,iCategoriyRepository, iApprovalRepository)
             };
         }
 
@@ -131,8 +139,11 @@ namespace tauxunit
             internal IUserCompanyRepository IUserCompanyRepository { get; set; }
             internal IEmailRepository IEmailRepository { get; set; }
             internal ICategoryRepository ICategoryRepository { get; set; }
+            internal IApprovalRepository IApprovalRepository { get; set; }
+			internal IGroupRepository IGroupRepository { get; set; }
+			internal IUserGroupRepository IUserGroupRepository { get; set; }
 
-            internal CompanyService CompanyService { get; set; }
+			internal CompanyService CompanyService { get; set; }
             internal LanguageService LanguageService { get; set; }
             internal MenuService MenuService { get; set; }
             internal RoleMatrixService RoleMatrixService { get; set; }

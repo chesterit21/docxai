@@ -22,34 +22,5 @@ namespace Api.Repository.Systems
         {
             return await GetAsync(x => x.InsertedAt.Date >= startDate && x.InsertedAt.Date <= endDate, page, limit);
         }
-
-        public async Task<object> GetAllAsync(DateTime startDate, DateTime endDate, int page, int limit)
-        {
-            var skip = Skip(page, limit);
-            return await context.ApplicationLog
-            .LeftJoin(
-                context.User,
-                at => at.InsertedBy,
-                us => us.UserId,
-                (at, us) => new
-                {
-                    at.Id,
-                    at.IPAddress,
-                    at.UserAgent,
-                    at.Type,
-                    at.Message,
-                    at.StackTrace,
-                    at.Endpoint,
-                    at.Parameter,
-                    at.InsertedBy,
-                    at.InsertedAt,
-                    us.UserName,
-                    us.FullName
-                })
-            .OrderByDescending(x => x.InsertedAt)
-            .Skip(skip)
-            .Take(limit)
-            .ToListAsync();
-        }
     }
 }

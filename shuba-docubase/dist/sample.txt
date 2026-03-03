@@ -1,0 +1,82 @@
+issue
+1. pada saat data dihapus tapi tetap tampil di data table.
+2. perlu diprovide enpoint untuk service pengolahan file word, execel, (ppt tidak ada versi reactjs di syncfusion) menggunakan syncfusion untuk keperluan mengedit file di frontend.
+3. endpoint get data table highlight document dan recent document?
+4. endpoint update is favorite category dan document:
+* handle favorite/unfavorite -  done
+* update favorite pada list category dan document tidak tersimpan 
+
+list document category (get /documents/list-document-category)
+1. key insertAt belum ada - done
+2. key tipe file belum ada - done
+3. file size belum di adjust - done
+4. total row belum ada - done
+5. parameter untuk search data table belum ada - done
+
+edit document (put /documents)
+1. endpoint edit error - done
+2. key documentAttributes tidak masuk ke db - done
+
+- document upload file (post /documents/upload-initial-document/{catid}) (on progress)
+1.enpoint error
+
+- halaman document detail
+1. key json untuk status aprroval tidak ada. - done
+2. untuk detail file pada card sebelah kanan datanya ambil yang mana?.
+2. key json last update tidak ada. - done
+4. document files:
+* key json last update tidak ada. - done
+* key json update by tidak ada - done
+* path untuk view dan download file tidak valid.
+5. endpoint audit log detail?
+6. send email: (on progress)
+* key json owner tidak ada
+* endpoint error
+7. endpoint delete document?
+
+- halaman edit document
+1. document files:
+* key json last update tidak ada. - done
+* key json update by tidak ada. - done
+* data table list files (tambah is main) - done
+2. add new version: (on progress)
+* endpoint error
+3. shared document - (on progress) (hold - add id in dropdow user)
+4. add work flow - (on progress) (hold - add id in dropdow user)
+5. endpoint audit log detail?
+
+- halaman favorite:
+* favorite document - done
+* favorite category - done
+* send email (TBD)
+
+- halaman shared workspace
+1. module my shared files (TBD)
+2. module shared to me (TBD)
+
+- halaman approval
+1. module my task (TBD)
+2. module my request (TBD)
+
+- halaman user & group
+1. module user (TBD)
+2. module group (TBD)
+
+- halaman profile
+1. edit profile, change password, upload avatar (TBD)
+
+- module global search (TBD)
+- module advance search (TBD)
+- module notification (TBD)
+- module item list (TBD)
+- module forget password (TBD)
+
+
+- new request
+1. di edit document dapat menambahkan attribute existing dan ketikan modal close step mulai dari awal - done
+2. child menu di sidemenu backgroudnya dihilangkan - done
+3. frontend config date diimplement di menu profile. - done
+4. tombol search atrribute pada add/edit collection dihilangkan dan pencaharian dilakukan ketika ditekan enter - done
+5. logo berupa image bukan icon. - done
+5. tambah tab remainder pada lonceng notifikasi. (TBD endpoint?)
+6. manage is main file di edit document - done

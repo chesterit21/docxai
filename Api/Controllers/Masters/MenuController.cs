@@ -10,7 +10,8 @@
     using System.ComponentModel;
 
 
-    [DisplayName("## Master Menu")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    [DisplayName("Master Menu")]
     [Menu("MnMsMenu")]
     [Route("[controller]")]
     [ApiController]
@@ -25,8 +26,8 @@
         }
 
 
-        [AllowAnonymous]
-        [HttpGet("nested")]
+		[UserAction(UserAction.Read)]
+		[HttpGet("nested")]
         public async Task<IActionResult> GetNested()
         {
             var result = await service.GetNested();
@@ -42,14 +43,22 @@
         }
 
         [UserAction(UserAction.Read)]
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetFIlter([FromQuery] ReqestFilter filter)
+        [HttpGet("list")]
+        public async Task<IActionResult> GetFIlter([FromQuery] RequestFilter filter)
         {
             var result = await service.GetAll(filter);
             return ResultFactory.Create(result);
         }
 
-        [UserAction(UserAction.Insert)]
+		[UserAction(UserAction.Read)]
+		[HttpGet("get-menu-loggeduser")]
+		public async Task<IActionResult> GetMenuForLogedUser()
+		{
+			var result = await service.GetMenuForLogedUser();
+			return ResultFactory.Create(result);
+		}
+
+		[UserAction(UserAction.Insert)]
         [HttpPost]
         public async Task<IActionResult> Post(RequestMenu request)
         {

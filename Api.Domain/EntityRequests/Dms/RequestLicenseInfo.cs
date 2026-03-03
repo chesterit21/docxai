@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Api.Domain.EntityRequests.Dms
+{
+	public class RequestLicenseInfo
+	{
+		public int UserCount { get; set; }
+		public long ValidityPeriod { get; set; }
+	}
+}

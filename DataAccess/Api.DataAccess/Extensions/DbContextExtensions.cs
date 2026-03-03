@@ -1,11 +1,12 @@
-﻿using Npgsql.EntityFrameworkCore.PostgreSQL;
+﻿using Api.DataAccess.Models.Dms;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Dynamic;
 using System.Reflection;
-using Npgsql;
 
 namespace Api.DataAccess.Extensions
 {
@@ -372,5 +373,38 @@ namespace Api.DataAccess.Extensions
 
             return await cmd.ExecuteNonQueryAsync();
         }
-    }
+
+		public static bool IsEntityTracked<T>(this DbContext context, T entity) where T : class
+		{
+			var entry = context.ChangeTracker.Entries<T>()
+				.FirstOrDefault(e => e.Entity == entity ||
+									 context.Entry(e.Entity).Property("Id").CurrentValue.Equals(
+										 context.Entry(entity).Property("Id").CurrentValue));
+
+			return entry != null;
+		}
+        //use above that
+        //if (!context.IsEntityTracked(parent))
+        //{
+        //    context.Attach(parent);
+        //}
+	    // context.Entry(parent).State = EntityState.Modified;
+
+
+		public static bool IsEntityTrackedById<T>(this DbContext context, object id) where T : class
+		{
+			var keyProperty = typeof(T).GetProperty("Id");
+			if (keyProperty == null) throw new InvalidOperationException("Entity must have an 'Id' property.");
+
+			return context.ChangeTracker.Entries<T>()
+				.Any(e => keyProperty.GetValue(e.Entity)?.Equals(id) == true);
+		}
+        //How to use above extension
+        //if (!context.IsEntityTrackedById<Documents>(documentId))
+        //{
+        //    var parent = new Documents { Id = documentId };
+		      //  context.Attach(parent);
+        //}
+
+}
 }

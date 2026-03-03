@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Api.DataAccess.Models.Systems
 {
@@ -28,5 +29,8 @@ namespace Api.DataAccess.Models.Systems
 
         [Column(TypeName = "text")]
         public string Parameter { get; set; }
-    }
+
+		[JsonIgnore]
+		public AuditTrail Audit { get; set; }
+	}
 }

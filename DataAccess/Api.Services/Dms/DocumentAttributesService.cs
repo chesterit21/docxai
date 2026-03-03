@@ -13,7 +13,7 @@ namespace Api.Services.Masters
 {
 	public class DocumentAttributesService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IDocumentAttributesRepository repository) : BaseService(accessor, languageRepository)
 	{
-		public async Task<object> GetAll(ReqestFilter request)
+		public async Task<object> GetAll(RequestFilter request)
 		{
 			await ValidateInputRequestAsync(request);
 
@@ -53,8 +53,6 @@ namespace Api.Services.Masters
 		{
 			await ValidateInputRequestAsync(request);
 
-			await CheckIfExist(request.Id);
-
 			var entity = request.CopyProperties<DocumentAttributes>();
 
 			await repository.LogTransactionAndAuditTrail($"Insert new Document Attributes", Domain.Attributes.UserAction.Insert, entity);
@@ -62,7 +60,7 @@ namespace Api.Services.Masters
 			return await repository.InsertAsync(entity);
 		}
 
-		public async Task<DocumentAttributes> Update(RequestDocumentAttributes request)
+		public async Task<DocumentAttributes> Update(RequestUpdateDocumentAttributes request)
 		{
 			await ValidateInputRequestAsync(request);
 
@@ -75,29 +73,17 @@ namespace Api.Services.Masters
 			return await repository.UpdateAsync(entity);
 		}
 
-		public async Task<DocumentAttributes> SoftDelete(int id)
+		public async Task<int> SaveDocumentAttribute(RequestUpdateDocumentAttributes request)
 		{
-			await ValidateInputAsync(id);
-			await CheckIfExist(id);
+			await ValidateInputRequestAsync(request);
 
-			var entity = new DocumentAttributes { Id = id };
+			//await CheckIfExist(request.Id);
 
-			await repository.LogTransactionAndAuditTrail($"Soft delete existing Document Attributes with id {id}", Domain.Attributes.UserAction.Update, entity);
+			var entity = request.CopyProperties<DocumentAttributes>();
 
-			return await repository.MarkAsDeletedAsync(entity);
-		}
+			await repository.LogTransactionAndAuditTrail($"Update existing Request Document Attributes with id {entity.Id}", Domain.Attributes.UserAction.Update, entity);
 
-		public async Task<DocumentAttributes> SoftUndelete(int id)
-		{
-			await ValidateInputAsync(id);
-
-			await CheckIfExist(id);
-
-			var entity = new DocumentAttributes { Id = id };
-
-			await repository.LogTransactionAndAuditTrail($"Soft undelete existing Document Attributes with id {id}", Domain.Attributes.UserAction.Update, entity);
-
-			return await repository.MarkAsNotDeletedAsync(entity);
+			return await repository.SaveDocumentAttribute(entity);
 		}
 
 		private async Task CheckIfExist(int id)

@@ -7,8 +7,10 @@
         public string FullName { get; set; }
         public string CompanyId { get; set; }
         public string CompanyName { get; set; }
+		public bool IsAdmin { get; set; }
+        public string UserType { get; set; }
 
-        public List<Company> Companies { get; set; }
+		public List<Company> Companies { get; set; }
 
         public class Company
         {

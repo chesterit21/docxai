@@ -5,7 +5,7 @@
     using Api.Domain.EntityRequests.Authentications;
     using Api.Domain.EntityResponses.Users;
     using Api.Extensions;
-    using Api.Services.Masters;
+	using Api.Services.Masters;
     using Api.Services.Systems;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -18,13 +18,16 @@
     [AllowAnonymous]
     [Route("[controller]")]
     [ApiController]
-    public class AuthenticationController(IHttpContextAccessor accessor, IConfiguration configuration, IMemoryCache memoryCache, UserService service, LanguageService language) : ControllerBase
+    public class AuthenticationController(IHttpContextAccessor accessor, IConfiguration configuration, IMemoryCache memoryCache, 
+        UserService service, LanguageService language, Api.Services.Dms.ITokenBlacklistService _blacklistService) : ControllerBase
     {
-        [HttpPost("access-token")]
+		[HttpPost("access-token")]
         public async Task<IActionResult> GetAccessToken([FromBody] RequestUserLogin request)
         {
             var loginAttempt = configuration["Login:Attempts"].ToInt32();
             var loginAllowed = configuration["Login:AllowedReloginAfterMinutes"].ToInt32();
+
+            await service.ValidateCanRegisterNewUser();
 
             var cache = memoryCache.Get<RequestLoginAttempt>(request.UserName);
             if (cache == null)
@@ -104,8 +107,10 @@
                     new(JwtRegisteredClaimNames.Email, request.UserName),
                     new(JwtRegisteredClaimNames.GivenName, user.UserName),
                     new(JwtRegisteredClaimNames.FamilyName, "PT. SHUBA MITRA SOLUSI"),
-                    new(JwtRegisteredClaimNames.Website, "https://shuba.co.id")
-                };
+                    new(JwtRegisteredClaimNames.Website, "https://shuba.co.id"),
+					new("user_type", user.UserType),
+					new("Roles", user.UserType)
+				};
 
             var token = new JwtSecurityToken(
                 "shuba.co.id",
@@ -127,7 +132,29 @@
         {
             var userId = accessor.HttpContext?.User?.Identity?.Name.ToInt32() ?? 0;
             await service.Logout(userId);
-            return ResultFactory.Create("Logout", System.Net.HttpStatusCode.OK);
+
+			var authHeader = Request.Headers["Authorization"].ToString();
+			if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+			{
+				return BadRequest("Authorization header missing or invalid.");
+			}
+			var token = authHeader.Substring("Bearer ".Length).Trim();
+			// Validate token expiration time (without validating signature) to store expiration time
+			var jwtHandler = new JwtSecurityTokenHandler();
+			JwtSecurityToken jwtToken;
+			try
+			{
+				jwtToken = jwtHandler.ReadJwtToken(token);
+			}
+			catch (Exception)
+			{
+				return BadRequest("Invalid token format.");
+			}
+			var expires = jwtToken.ValidTo;
+			// Add token to blacklist with its expiration time
+			_blacklistService.AddToken(token, expires);
+			return Ok(new { message = "Successfully logged out." });
+			//return ResultFactory.Create("Logout", System.Net.HttpStatusCode.OK);
         }
     }
 }

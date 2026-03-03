@@ -23,19 +23,19 @@ namespace Api.Services.Systems
             };
         }
 
-        public async Task<ResponsePagination> Get(DateTime startDate, DateTime endDate, int page, int limit)
+        public async Task<object> Get(DateTime startDate, DateTime endDate, int page, int limit)
         {
             await ValidateInputDateRangeAsync(startDate, endDate);
 
-            var totalRecords = await repository.CountAsync(startDate, endDate);
-            var records = await repository.GetAllAsync(startDate, endDate, page, limit);
+            //var totalRecords = await repository.CountAsync(startDate.ToUniversalTime(), endDate.ToUniversalTime());
+            var response = await repository.GetAsync(startDate, endDate, page, limit);
 
             return new ResponsePagination
             {
-                TotalRecords = totalRecords,
-                TotalPages = GetTotalPages(totalRecords, limit),
-                Data = records
-            };
+                TotalRecords = response.TotalRecord,
+                TotalPages = GetTotalPages(response.TotalRecord, limit),
+                Data = response.Record
+			};
         }
     }
 }

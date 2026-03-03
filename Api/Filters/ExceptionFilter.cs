@@ -1,6 +1,7 @@
 ﻿using Api.Domain;
 using Api.Extensions;
 using Api.Services.Systems;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Diagnostics;
 using System.Text.Json;
@@ -22,30 +23,87 @@ namespace Docubase.api.Filters
             }
         }
 
-        public async Task OnExceptionAsync(ExceptionContext context)
+		//public async Task OnExceptionAsync(ExceptionContext context)
+		//{
+		//	if (!Debugger.IsAttached)
+		//		await WriteToDatabaseSqlServer(context);
+
+		//	//int code = 500;
+		//	//if (context.Exception is ApiException aex)
+		//	//{
+		//	//    code = aex.StatusCode;
+		//	//}
+
+		//	//var result = JsonSerializer.Serialize(new
+		//	//         {
+		//	//             code,
+		//	//             success = false,
+		//	//             message = context.Exception.GetExceptionMessages()
+		//	//             //Data = context.Exception.StackTrace,
+		//	//         });
+
+		//	//         HttpResponse response = context.HttpContext.Response;
+		//	//         response.StatusCode = code;
+		//	//         response.ContentType = "application/json";
+		//	//         response.ContentLength = result.Length;
+		//	//         await response.WriteAsync(result);
+		//	if (context.Exception is ApiException apiEx)
+		//	{
+		//		context.Result = new ObjectResult(new
+		//		{
+		//			message = apiEx.Message
+		//		})
+
+		//		{
+		//			StatusCode = apiEx.StatusCode > 0 ? apiEx.StatusCode : 400
+		//		};
+		//		context.ExceptionHandled = true;
+		//		return; // Stop further processing
+		//	}
+
+		//	// For all other exceptions, return a generic message
+		//	context.Result = new ObjectResult(new
+		//	{
+		//		message = "Internal server error"
+		//	})
+		//	{
+		//		StatusCode = 500
+		//	};
+		//	context.ExceptionHandled = true;
+		//}
+
+		public async Task OnExceptionAsync(ExceptionContext context)
         {
             if (!Debugger.IsAttached)
                 await WriteToDatabaseSqlServer(context);
 
-            int code = 500;
-            if (context.Exception is ApiException aex)
-            {
-                code = aex.StatusCode;
-            }
+			if (context.Exception is ApiException apiEx)
+			{
+				context.Result = new ObjectResult(new
+				{
+					message = apiEx.Message
+				})
 
-            var result = JsonSerializer.Serialize(new
-            {
-                code,
-                success = false,
-                message = context.Exception.GetExceptionMessages()
-                //Data = context.Exception.StackTrace,
-            });
+				{
+					StatusCode = apiEx.StatusCode > 0 ? apiEx.StatusCode : 400
+				};
+				context.ExceptionHandled = true;
+				return;
+			}
 
-            HttpResponse response = context.HttpContext.Response;
-            response.StatusCode = code;
-            response.ContentType = "application/json";
-            response.ContentLength = result.Length;
-            await response.WriteAsync(result);
-        }
+			// Show the actual exception message for all other exceptions
+			context.Result = new ObjectResult(new
+			{
+				message = context.Exception.GetExceptionMessages() // or context.Exception.Message
+			})
+			//context.Result = new ObjectResult(new
+			//{
+			//	message = "Internal server error"
+			//})
+			{
+				StatusCode = 500
+			};
+			context.ExceptionHandled = true;
+		}
     }
 }

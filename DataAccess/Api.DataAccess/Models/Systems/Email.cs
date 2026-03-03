@@ -30,7 +30,7 @@ namespace Api.DataAccess.Models.Systems
 
         public int SentStatus { get; set; } = 0;
 
-        [Column(TypeName = "varchar(100)")]
+        [Column(TypeName = "varchar(1000)")]
         public string StatusMessage { get; set; }
     }
 }

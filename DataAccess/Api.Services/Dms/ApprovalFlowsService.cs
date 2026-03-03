@@ -13,7 +13,7 @@ namespace Api.Services.Masters
 {
 	public class ApprovalFlowsService(IHttpContextAccessor accessor, ILanguageRepository languageRepository, IApprovalFlowsRepository repository) : BaseService(accessor, languageRepository)
 	{
-		public async Task<object> GetAll(ReqestFilter request)
+		public async Task<object> GetAll(RequestFilter request)
 		{
 			await ValidateInputRequestAsync(request);
 
@@ -116,13 +116,14 @@ namespace Api.Services.Masters
 			}
 		}
 
+
 		//private async Task CheckIfExist(int id, string name)
 		//{
 		//    var any = await repository.AnyAsync(x => x.Id == id || x.Name == name);
 		//    if (any)
 		//    {
 		//        var message = await GetMessage(LangCodes.Duplicate);
-		//        throw new ApiException($"{message}. Approval Flows ID {id}, Name {name}");
+		//        throw new ApiException($"{message}. ApprovalAction Flows ID {id}, Name {name}");
 		//    }
 		//}
 	}

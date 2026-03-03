@@ -28,7 +28,7 @@ namespace Api.Services.Systems
             };
         }
 
-        public async Task<ResponsePagination> Get(DateTime startDate, DateTime endDate, int page, int limit)
+        public async Task<object> Get(DateTime startDate, DateTime endDate, int page, int limit)
         {
             await ValidateInputDateRangeAsync(startDate, endDate);
 

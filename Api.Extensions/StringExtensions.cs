@@ -32,5 +32,12 @@
 
             return $"{hours:D2}:{minutes:D2}:{seconds:D2}";
         }
-    }
+		public static string SplitCamelCase(this string input)
+		{
+			return System.Text.RegularExpressions.Regex
+				.Replace(input, "(?<!^)([A-Z])", " $1")
+				.Trim();
+		}
+
+	}
 }
