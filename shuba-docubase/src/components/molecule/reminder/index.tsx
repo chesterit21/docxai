@@ -7,17 +7,14 @@ import {
   Space,
   DatePicker,
   Form,
-  Avatar,
   Table,
   Button,
   Input,
-  Typography,
   type PaginationProps,
 } from "antd";
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
-  ClockCircleOutlined,
   SearchOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
@@ -35,7 +32,6 @@ dayjs.extend(utc);
 
 const now = dayjs.utc().format("YYYY-MM-DD");
 const intervalDay = dayjs.utc().add(-1, "month").format("YYYY-MM-DD");
-const { Text } = Typography;
 
 const itemRender: PaginationProps["itemRender"] = (
   _,

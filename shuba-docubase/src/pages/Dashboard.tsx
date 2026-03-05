@@ -156,7 +156,7 @@ const Dashboard = () => {
   const [downloadedDocsDateRange, setDownloadedDocsDateRange] = useState<
     [Dayjs | null, Dayjs | null]
   >([dayjs().subtract(1, "month"), dayjs()]);
-  const [storageUsersDateRange, setStorageUsersDateRange] = useState<
+  const [storageUsersDateRange, _setStorageUsersDateRange] = useState<
     [Dayjs | null, Dayjs | null]
   >([dayjs().subtract(1, "month"), dayjs()]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(

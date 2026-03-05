@@ -10,13 +10,11 @@ import {
   Space,
   Table,
   Tooltip,
-  Form,
 } from "antd";
 import type { TableProps } from "antd";
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
-  CheckOutlined,
   CloseOutlined,
   ExclamationCircleOutlined,
   PlusOutlined,

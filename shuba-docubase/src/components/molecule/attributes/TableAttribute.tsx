@@ -103,7 +103,7 @@ const TableList = () => {
       key: "insertedByFullName",
       dataIndex: "insertedByFullName",
       title: "Owner",
-      render: (items: any, row: any) => {
+      render: (_items: any, row: any) => {
         return (
           <>
             <div>{row.insertedByByFullName}</div>
@@ -116,11 +116,11 @@ const TableList = () => {
       dataIndex: "updatedAt",
       key: "updatedAt",
       title: "Last Update",
-      render: (items: any, row: any) => {
+      render: (_: any, row: any) => {
         return (
           <>
             <div>{row.updatedByFullName}</div>
-            <div>{dayjs.utc(items).format(dateConfig)}</div>
+            <div>{dayjs.utc(_).format(dateConfig)}</div>
           </>
         );
       },

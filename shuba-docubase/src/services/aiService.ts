@@ -2,7 +2,7 @@ import axios from 'axios';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 // AI Server Configuration
-const AI_SERVER_URL = 'http://103.16.117.119:8000';
+const AI_SERVER_URL = 'https://localhost:5000';
 const SECURITY_CONFIG = {
     APP_ID: 'DMS-CLIENT-APP-2026',
     API_KEY: 'SHUBA-APP-DMS-RAG',
@@ -58,12 +58,12 @@ export interface InitResponse {
     processing_docs: ProcessingDoc[];
 }
 
-export type SystemEventType = 
-    | 'processing_started' 
-    | 'processing_progress' 
-    | 'processing_completed' 
-    | 'processing_error' 
-    | 'error' 
+export type SystemEventType =
+    | 'processing_started'
+    | 'processing_progress'
+    | 'processing_completed'
+    | 'processing_error'
+    | 'error'
     | 'info';
 
 export interface SystemEventPayload {
@@ -211,7 +211,7 @@ export const streamMessageToAI = async (
             // Backward compatibility
             document_id: documentIds && documentIds.length === 1 ? documentIds[0] : undefined,
         });
-        
+
         console.log('dataBody :', dataBody);
 
         await fetchEventSource(`${AI_SERVER_URL}${ENDPOINTS.CHAT_STREAM}`, {
@@ -228,12 +228,12 @@ export const streamMessageToAI = async (
                         // Fallback: raw text if not JSON
                         let textChunk = msg.data;
                         if (msg.data.startsWith('{')) {
-                             try {
+                            try {
                                 const parsed = JSON.parse(msg.data);
                                 if (parsed.delta) textChunk = parsed.delta;
-                             } catch (e) {
+                            } catch (e) {
                                 // ignore, use raw
-                             }
+                            }
                         }
                         onMessage(textChunk);
                     } else if (msg.event === 'done') {

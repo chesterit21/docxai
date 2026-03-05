@@ -210,23 +210,25 @@ export default function Index() {
     setPage(Number(pagination.current));
   };
 
-  const transformData = (data: any) => {
-    if (!data) return null;
-
-    const parsed = JSON.parse(data);
-
-    return (
-      <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-        {parsed
-          .map((item: any) =>
-            Object.entries(item)
-              .map(([key, value]) => `${key}: ${value ?? "null"}`)
-              .join("\n")
-          )
-          .join("\n")}
-      </pre>
-    );
-  };
+  /*
+    const _transformData = (data: any) => {
+      if (!data) return null;
+  
+      const parsed = JSON.parse(data);
+  
+      return (
+        <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>
+          {parsed
+            .map((item: any) =>
+              Object.entries(item)
+                .map(([key, value]) => `${key}: ${value ?? "null"}`)
+                .join("\n")
+            )
+            .join("\n")}
+        </pre>
+      );
+    };
+  */
 
   const handleClickDownload = async () => {
     setLoadingDownload(true);
@@ -266,21 +268,21 @@ export default function Index() {
       ...entry,
       before: entry.before
         ? JSON.parse(entry.before)
-            .map((item: any) =>
-              Object.entries(item)
-                .map(([key, value]) => `${key}: ${value ?? "null"}`)
-                .join("\n")
-            )
-            .join("\n")
+          .map((item: any) =>
+            Object.entries(item)
+              .map(([key, value]) => `${key}: ${value ?? "null"}`)
+              .join("\n")
+          )
+          .join("\n")
         : null,
       after: entry.after
         ? JSON.parse(entry.after)
-            .map((item: any) =>
-              Object.entries(item)
-                .map(([key, value]) => `${key}: ${value ?? "null"}`)
-                .join("\n")
-            )
-            .join("\n")
+          .map((item: any) =>
+            Object.entries(item)
+              .map(([key, value]) => `${key}: ${value ?? "null"}`)
+              .join("\n")
+          )
+          .join("\n")
         : null,
     }));
   };

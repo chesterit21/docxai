@@ -10,7 +10,6 @@ import {
   Form,
   Select,
   Input,
-  Checkbox,
   InputNumber,
   message,
 } from "antd";
@@ -185,66 +184,66 @@ export default function Index({
             {(evenData.attributeType === "select" ||
               evenData.attributeType === "checkbox" ||
               evenData.attributeType === "radio") && (
-              <Form.List name="options">
-                {(fields, { add, remove }) => {
-                  return (
-                    <>
-                      {fields.map(({ key, name, ...restField }) => (
-                        <Space key={key} style={{ display: "flex" }}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "opt"]}
-                            label={`Option ${name + 1}`}
-                            rules={[
-                              { required: true, message: "Missing value" },
-                            ]}
+                <Form.List name="options">
+                  {(fields, { add, remove }) => {
+                    return (
+                      <>
+                        {fields.map(({ key, name, ...restField }) => (
+                          <Space key={key} style={{ display: "flex" }}>
+                            <Form.Item
+                              {...restField}
+                              name={[name, "opt"]}
+                              label={`Option ${name + 1}`}
+                              rules={[
+                                { required: true, message: "Missing value" },
+                              ]}
+                            >
+                              <Input placeholder={`enter option ${name + 1}`} />
+                            </Form.Item>
+                            {name >= 1 && (
+                              <MinusCircleOutlined onClick={() => remove(name)} />
+                            )}
+                          </Space>
+                        ))}
+                        <Form.Item>
+                          <Button
+                            type="dashed"
+                            onClick={() => add()}
+                            iconPosition="end"
+                            block
+                            icon={<PlusOutlined />}
                           >
-                            <Input placeholder={`enter option ${name + 1}`} />
-                          </Form.Item>
-                          {name >= 1 && (
-                            <MinusCircleOutlined onClick={() => remove(name)} />
-                          )}
-                        </Space>
-                      ))}
-                      <Form.Item>
-                        <Button
-                          type="dashed"
-                          onClick={() => add()}
-                          iconPosition="end"
-                          block
-                          icon={<PlusOutlined />}
-                        >
-                          Add option
-                        </Button>
-                      </Form.Item>
-                    </>
-                  );
-                }}
-              </Form.List>
-            )}
+                            Add option
+                          </Button>
+                        </Form.Item>
+                      </>
+                    );
+                  }}
+                </Form.List>
+              )}
 
             {(evenData.attributeType === "text-field" ||
               evenData.attributeType === "text-area" ||
               evenData.attributeType === "number") && (
-              <>
-                {evenData.attributeType === "number" && (
+                <>
+                  {evenData.attributeType === "number" && (
+                    <Form.Item
+                      label="Min Length"
+                      name="min"
+                      rules={[{ required: true }]}
+                    >
+                      <InputNumber style={{ width: "100%" }} />
+                    </Form.Item>
+                  )}
                   <Form.Item
-                    label="Min Length"
-                    name="min"
+                    label="Max Length"
+                    name="max"
                     rules={[{ required: true }]}
                   >
-                    <InputNumber style={{ width: "100%" }} />
+                    <InputNumber style={{ width: "100%" }} min={1} />
                   </Form.Item>
-                )}
-                <Form.Item
-                  label="Max Length"
-                  name="max"
-                  rules={[{ required: true }]}
-                >
-                  <InputNumber style={{ width: "100%" }} min={1} />
-                </Form.Item>
-              </>
-            )}
+                </>
+              )}
 
             {evenData.attributeType === "date" && (
               <Form.Item

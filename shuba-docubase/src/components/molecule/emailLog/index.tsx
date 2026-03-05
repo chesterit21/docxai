@@ -214,7 +214,7 @@ export default function Index() {
       onCell: () => ({
         style: { verticalAlign: "top" },
       }),
-      render: (items: any, record: any) => (
+      render: (_: any, record: any) => (
         <Button
           icon={<SendOutlined />}
           onClick={() => handleResendSingle(record.id)}
@@ -338,21 +338,21 @@ export default function Index() {
       ...entry,
       before: entry.before
         ? JSON.parse(entry.before)
-            .map((item: any) =>
-              Object.entries(item)
-                .map(([key, value]) => `${key}: ${value ?? "null"}`)
-                .join("\n")
-            )
-            .join("\n")
+          .map((item: any) =>
+            Object.entries(item)
+              .map(([key, value]) => `${key}: ${value ?? "null"}`)
+              .join("\n")
+          )
+          .join("\n")
         : null,
       after: entry.after
         ? JSON.parse(entry.after)
-            .map((item: any) =>
-              Object.entries(item)
-                .map(([key, value]) => `${key}: ${value ?? "null"}`)
-                .join("\n")
-            )
-            .join("\n")
+          .map((item: any) =>
+            Object.entries(item)
+              .map(([key, value]) => `${key}: ${value ?? "null"}`)
+              .join("\n")
+          )
+          .join("\n")
         : null,
     }));
   };

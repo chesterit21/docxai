@@ -29,12 +29,12 @@ import {
   PartitionOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ScanEye } from "lucide-react";
 import type { PaginationProps, TableProps } from "antd";
 import apiClient from "../../../services/apiClient";
 import { useAuth } from "../../../context/AuthContext";
-import debounce from "lodash/debounce";
+// import debounce from "lodash/debounce";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import ShowDocumentOnly from "../../atom/document/ShowDocumentOnly";
@@ -103,7 +103,7 @@ const TableList = () => {
   const [form] = Form.useForm();
 
   const [optListDocument, setOptListDocument] = useState<any[]>([]);
-  const [fetching, setFetching] = useState(false);
+  const [fetching] = useState(false);
   const [fileSelected, setFileSelected] = useState<any>({});
   const [openDocument, setOpenDocument] = useState(false);
 
@@ -124,10 +124,10 @@ const TableList = () => {
               items == 1
                 ? "orange"
                 : items == 2
-                ? "green"
-                : items == 3
-                ? "magenta"
-                : "default"
+                  ? "green"
+                  : items == 3
+                    ? "magenta"
+                    : "default"
             }
             style={{ height: "100%", paddingInline: 10 }}
           >
@@ -193,7 +193,7 @@ const TableList = () => {
       key: "fullName",
       dataIndex: "fullName",
       title: "Name",
-      render: (items: any, row: any) => {
+      render: (_items: any, row: any) => {
         return (
           // <Flex gap="large" align='center'>
           //     <Badge dot offset={[0, 40]} color="green" style={{width: 13, height: 13}}><Avatar size="large" icon={<UserOutlined />} /></Badge>
@@ -218,10 +218,10 @@ const TableList = () => {
               items == 1
                 ? "orange"
                 : items == 2
-                ? "green"
-                : items == 3
-                ? "magenta"
-                : "default"
+                  ? "green"
+                  : items == 3
+                    ? "magenta"
+                    : "default"
             }
             style={{ height: "100%", paddingInline: 10 }}
           >

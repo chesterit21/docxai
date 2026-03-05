@@ -33,7 +33,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Copy, Download, Pencil, ScanEye, Trash2 } from "lucide-react";
+import { Download, Pencil, ScanEye, Trash2 } from "lucide-react";
 import LogDocument from "../../atom/ModalLogDocument";
 import SendEmail from "../../atom/sendEmail/ModalSendEmail";
 import apiClient from "../../../services/apiClient";
@@ -68,7 +68,7 @@ export default function Index() {
   const dateConfig =
     config?.dataGrid?.dateTimeFormat || "YYYY-MM-DD | HH:mm:ss";
 
-  const [messageApi, contextHolder] = message.useMessage();
+  const [, contextHolder] = message.useMessage();
   const [detailDocument, setDetailDocument] = useState<any>({});
   const [documentFiles, setDocumentFiles] = useState<any>([]);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
@@ -155,15 +155,15 @@ export default function Index() {
     if (Object.keys(detailDocument).length > 0) {
       const item =
         detailDocument.parentsCategory &&
-        Array.isArray(detailDocument.parentsCategory) &&
-        detailDocument.parentsCategory.length > 0
+          Array.isArray(detailDocument.parentsCategory) &&
+          detailDocument.parentsCategory.length > 0
           ? detailDocument.parentsCategory.reverse().map((parent: any) => ({
-              title: (
-                <Link to={`/document/summit-corp/${parent.id}/${parent.name}`}>
-                  {parent.name}
-                </Link>
-              ),
-            }))
+            title: (
+              <Link to={`/document/summit-corp/${parent.id}/${parent.name}`}>
+                {parent.name}
+              </Link>
+            ),
+          }))
           : [];
 
       // Fetch category name and add to breadcrumb
@@ -214,7 +214,7 @@ export default function Index() {
   const userId =
     user?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || 0;
 
-  const { isOwned, priv } = useMemo(() => {
+  const { priv } = useMemo(() => {
     const isOwner = detailDocument?.userofOwner?.userID === Number(userId);
 
     const sharedList = detailDocument?.sharedTo?.sharedUser ?? [];
@@ -227,7 +227,7 @@ export default function Index() {
       isDelete: !!(isOwner || me.isDelete),
     };
 
-    return { isOwned: !!isOwner, priv: p };
+    return { priv: p };
   }, [detailDocument, user]);
 
   const getDetailDocument = () => {
@@ -417,8 +417,8 @@ export default function Index() {
                         {item.attributeType == "date"
                           ? dayjs.utc(item.value).format("YYYY-MM-DD")
                           : item.attributeType == "checkbox"
-                          ? item.value.join(", ")
-                          : item.value}
+                            ? item.value.join(", ")
+                            : item.value}
                       </span>
                       <Divider style={{ margin: "10px 0px" }}></Divider>
                     </Card>
@@ -433,24 +433,24 @@ export default function Index() {
                 <p className="font-bold">Related Document</p>
                 <div className="flex flex-col gap-1">
                   {detailDocument?.documentRelated &&
-                  detailDocument?.documentRelated?.length > 0
+                    detailDocument?.documentRelated?.length > 0
                     ? detailDocument.documentRelated.map(
-                        (item: any, index: number) => (
-                          <div
-                            className="flex items-center gap-1.5"
-                            key={index}
-                          >
-                            <FileTextOutlined
-                              style={{ fontSize: 17, color: "#595959" }}
-                            />
-                            <Link to={`/document/document-view/${item.value}`}>
-                              <span className="text-slate-800 font-semibold">
-                                {item.text}
-                              </span>
-                            </Link>
-                          </div>
-                        )
+                      (item: any, index: number) => (
+                        <div
+                          className="flex items-center gap-1.5"
+                          key={index}
+                        >
+                          <FileTextOutlined
+                            style={{ fontSize: 17, color: "#595959" }}
+                          />
+                          <Link to={`/document/document-view/${item.value}`}>
+                            <span className="text-slate-800 font-semibold">
+                              {item.text}
+                            </span>
+                          </Link>
+                        </div>
                       )
+                    )
                     : "-"}
                 </div>
                 <Divider style={{ margin: "10px 0px" }}></Divider>

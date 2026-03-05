@@ -65,59 +65,58 @@ export default function Index({ open, setOpen, file }: any) {
         const workbook = new Workbook(jsonData, 'xlsx' as SaveType);
         const blobResult = await workbook.saveAsBlob("xlsx" as BlobSaveType);
         const blob: Blob = blobResult.blobData;
-        const newFile = new File( [blob], file.documentFileName + file.documentType, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", } );
-        
+        const newFile = new File([blob], file.documentFileName + file.documentType, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", });
+
         const formData = new FormData();
         formData.append("fileUpload", newFile);
-          if (saveAsNew) {
-            // Upload as new version
-            formData.append("DocumentID", file.documentID);
-            formData.append("fileUpload", newFile);
-            apiClient
-              .post(`/documents/upload-new-version`, formData, {
+        if (saveAsNew) {
+          // Upload as new version
+          formData.append("DocumentID", file.documentID);
+          formData.append("fileUpload", newFile);
+          apiClient
+            .post(`/documents/upload-new-version`, formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            })
+            .then(() => {
+              message.success("Edit file is successful");
+              setConfirmLoading(false);
+              setOpenConfirm(false);
+              setOpen(false);
+              navigate(0);
+            })
+            .catch((err) => {
+              console.error(err);
+              message.error("Edit file is failed");
+              setConfirmLoading(false);
+            });
+        } else {
+          // Update existing file
+          formData.append("file", newFile);
+          apiClient
+            .put(
+              `/documentfiles?Id=${file.id}&DocumentID=${file.documentID}`,
+              formData,
+              {
                 headers: {
                   "Content-Type": "multipart/form-data",
                 },
-              })
-              .then(() => {
-                message.success("Edit file is successful");
-                setConfirmLoading(false);
-                setOpenConfirm(false);
-                setOpen(false);
-                navigate(0);
-              })
-              .catch((err) => {
-                console.error(err);
-                message.error("Edit file is failed");
-                setConfirmLoading(false);
-              });
-          } else {
-            // Update existing file
-            formData.append("file", newFile);
-            apiClient
-              .put(
-                `/documentfiles?Id=${file.id}&DocumentID=${file.documentID}`,
-                formData,
-                {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                  },
-                }
-              )
-              .then(() => {
-                message.success("Edit file is successful");
-                setConfirmLoading(false);
-                setOpenConfirm(false);
-                setOpen(false);
-                navigate(0);
-              })
-              .catch((err) => {
-                console.error(err);
-                message.error("Edit file is failed");
-                setConfirmLoading(false);
-              });
-          }
-        });
+              }
+            )
+            .then(() => {
+              message.success("Edit file is successful");
+              setConfirmLoading(false);
+              setOpenConfirm(false);
+              setOpen(false);
+              navigate(0);
+            })
+            .catch((err) => {
+              console.error(err);
+              message.error("Edit file is failed");
+              setConfirmLoading(false);
+            });
+        }
       }
     } catch (error) {
       console.error("Save error:", error);

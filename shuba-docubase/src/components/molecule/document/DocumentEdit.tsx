@@ -116,7 +116,7 @@ export default function Index() {
   const [formDocument] = Form.useForm();
 
   const [itemBreadcrumb, setItemBreadcrumb] = useState<any>([]);
-  const [categoryName, setCategoryName] = useState<string>("");
+  const [, setCategoryName] = useState<string>("");
 
   const [optListDocument, setOptListDocument] = useState<any[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -222,15 +222,15 @@ export default function Index() {
     if (Object.keys(detailDocument).length > 0) {
       const item =
         detailDocument.parentsCategory &&
-        Array.isArray(detailDocument.parentsCategory) &&
-        detailDocument.parentsCategory.length > 0
+          Array.isArray(detailDocument.parentsCategory) &&
+          detailDocument.parentsCategory.length > 0
           ? detailDocument.parentsCategory.reverse().map((parent: any) => ({
-              title: (
-                <Link to={`/document/summit-corp/${parent.id}/${parent.name}`}>
-                  {parent.name}
-                </Link>
-              ),
-            }))
+            title: (
+              <Link to={`/document/summit-corp/${parent.id}/${parent.name}`}>
+                {parent.name}
+              </Link>
+            ),
+          }))
           : [];
 
       // Fetch category name and add to breadcrumb
@@ -743,7 +743,7 @@ export default function Index() {
           <Form
             layout="vertical"
             form={formDocument}
-            // onFinish={handleSubmit}
+          // onFinish={handleSubmit}
           >
             <Row gutter={[16, 16]}>
               <Col span={24}>

@@ -126,10 +126,10 @@ const TableList = () => {
               items == 1
                 ? "orange"
                 : items == 2
-                ? "green"
-                : items == 3
-                ? "magenta"
-                : "default"
+                  ? "green"
+                  : items == 3
+                    ? "magenta"
+                    : "default"
             }
             style={{ height: "100%", paddingInline: 10 }}
           >
@@ -236,7 +236,7 @@ const TableList = () => {
       key: "userName",
       dataIndex: "userName",
       title: "Username",
-      render: (item: any, row: any) => (
+      render: (_item: any, row: any) => (
         <Flex gap="large" align="center">
           <Avatar size="large" icon={<UserOutlined />} />
           <span className="font-bold">{row.userName}</span>
