@@ -40,7 +40,7 @@ namespace Docubase.api.Controllers
 
         [UserAction(UserAction.Read)]
         [HttpGet("log-audit-search")]
-        public async Task<IActionResult> GetLogAuditAdvancedSearch([FromQuery] ReqestFilter request)
+        public async Task<IActionResult> GetLogAuditAdvancedSearch([FromQuery] RequestFilter request)
         {
             var result = await logAuditTrailService.Get(request);
             return ResultFactory.Create(result);
