@@ -102,6 +102,7 @@ public class WebAiOrchestrator : IAsyncDisposable
         string systemPrompt,
         string userMessage,
         string sessionId,
+        List<string>? filePaths = null,
         CancellationToken ct = default)
     {
         var page = await GetOrCreatePageAsync(provider);
@@ -122,6 +123,18 @@ public class WebAiOrchestrator : IAsyncDisposable
 
             await SFCoreWebAIBrowser.WaitForPageReady(page, selectors);
             await SFCoreWebAIBrowser.CheckClearChat(page, selectors, "Clear-Chat");
+
+            // Upload file(s) jika ada — route berdasarkan provider name
+            if (filePaths != null && filePaths.Count > 0)
+            {
+                foreach (var filePath in filePaths)
+                {
+                    Console.WriteLine($"[{provider.WebAiName}] 📎 Uploading file: {Path.GetFileName(filePath)}");
+                    await SFCoreWebAIBrowser.UploadFile(page, selectors, filePath, provider.WebAiName);
+                    await Task.Delay(2000); // jeda antar file
+                }
+            }
+
             await SFCoreWebAIBrowser.SendMessage(page, selectors, systemPrompt, userMessage);
             await SFCoreWebAIBrowser.ScrollElementToBottom(page);
             var response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId);

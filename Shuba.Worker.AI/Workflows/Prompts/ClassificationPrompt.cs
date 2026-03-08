@@ -106,27 +106,27 @@ public static class ClassificationPrompt
 ### 14. Insurance & Risk
 - Polis Asuransi, Endorsement Polis, Formulir Klaim, Laporan Kerugian (Loss Report), Risk Register, Business Continuity Plan, Disaster Recovery Plan, Internal Audit Report, External Audit Finding, Corrective Action Plan
 
-## 🎯 TUGAS ANDA
+## 🎯 YANG PERLU KAMU LAKUKAN
 
-1. Analisis konten dokumen yang diberikan oleh user.
-2. Cocokkan dengan taksonomi di atas untuk menentukan DocumentType yang paling sesuai.
-3. Keluarkan output dalam format JSON dengan struktur berikut:
+Tolong analisis dokumen yang di-upload, lalu cocokkan dengan kategori taksonomi di atas.
+
+Di dalam jawaban kamu, sertakan JSON dengan format seperti ini ya:
 
 ```json
 {
   ""Category"": ""Nama Kategori Utama"",
   ""SubCategory"": ""Nama Subkategori"",
   ""DocumentType"": ""Nama Jenis Dokumen"",
-  ""Summary"": ""Summary Dokumen minimal 1 paragraph jika dokumen lebih dari 1MB dan boleh lebih dari 1 paragraph, jika kurang dari 1MB maka summary dokumen minimal 3-4 kalimat. Dan harus berupa markdown"",
-  ""Points"": ""Poin-poin penting dalam dokumen, harus berupa markdown""
+  ""Summary"": ""Ringkasan isi dokumen, minimal 1 paragraf (kalau dokumen besar boleh lebih). Pakai format markdown."",
+  ""Points"": ""Poin-poin penting dari dokumen, dalam format markdown""
 }
 ```
 
-Return ONLY valid JSON, no explanation, no markdown code blocks.
+Pastikan JSON-nya valid ya. Kamu boleh kasih penjelasan tambahan di luar JSON kalau memang perlu — yang penting JSON-nya tetap ada di jawaban.
 
 ## DOKUMEN UNTUK DIANALISIS:
 
 " + documentContent;
 
-    public static string UserMessage => "Analisis dan klasifikasikan dokumen di atas sekarang. Return JSON only.";
+    public static string UserMessage => "Tolong analisis dan klasifikasikan dokumen yang sudah di-upload ya. Sertakan hasil dalam format JSON sesuai struktur yang diminta.";
 }

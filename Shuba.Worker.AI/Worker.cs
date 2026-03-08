@@ -12,15 +12,13 @@ public class Worker(
     ProviderManager providerManager,
     WebAiOrchestrator orchestrator) : BackgroundService
 {
-    private const int MAX_CONCURRENT_TASKS = 3;
     private const int POLLING_INTERVAL_MS = 3000; // 3 detik
-    private readonly SemaphoreSlim _concurrencyLimiter = new(MAX_CONCURRENT_TASKS, MAX_CONCURRENT_TASKS);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("╔══════════════════════════════════════════════╗");
         logger.LogInformation("║  Shuba.Worker.AI — Document Extractor       ║");
-        logger.LogInformation("║  Max Concurrent: {Max}  |  Poll: {Poll}ms        ║", MAX_CONCURRENT_TASKS, POLLING_INTERVAL_MS);
+        logger.LogInformation("║  Max Concurrent: 3  |  Poll: {Poll}ms        ║", POLLING_INTERVAL_MS);
         logger.LogInformation("╚══════════════════════════════════════════════╝");
 
         // Connect CDP saat startup
@@ -37,7 +35,7 @@ public class Worker(
         {
             try
             {
-                await PollAndProcessAsync(stoppingToken);
+                await PollAndDispatchAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -54,63 +52,75 @@ public class Worker(
         logger.LogInformation("[Worker] 🛑 Shutting down...");
     }
 
-    private async Task PollAndProcessAsync(CancellationToken ct)
+    /// <summary>
+    /// Setiap 3 detik: cek berapa provider idle → ambil task sebanyak itu → dispatch tanpa menunggu.
+    /// Task yang selesai duluan langsung release slot, poll berikutnya bisa isi lagi.
+    /// </summary>
+    private async Task PollAndDispatchAsync(CancellationToken ct)
     {
+        // Cek berapa slot provider yang lagi idle
+        var idleCount = providerManager.IdleCount;
+        if (idleCount == 0)
+        {
+            logger.LogDebug("[Worker] ⏸️ All providers busy, skip polling.");
+            return;
+        }
+
         using var scope = scopeFactory.CreateScope();
         var pollingRepo = scope.ServiceProvider.GetRequiredService<IAgentPollingTaskDocumentRepository>();
 
-        // Ambil max 3 task yang inqueue
+        // Ambil task sebanyak provider yang idle
         var pendingTasks = await pollingRepo.GetAsync(
             x => x.Status == "inqueue" && x.TaskCode == "Init-New-Doc");
 
         if (pendingTasks == null || !pendingTasks.Any())
             return;
 
-        // Limit ke max 3
-        var tasksToProcess = pendingTasks.Take(MAX_CONCURRENT_TASKS).ToList();
+        var tasksToProcess = pendingTasks.Take(idleCount).ToList();
 
-        logger.LogInformation("[Worker] 📋 Found {Count} inqueue tasks, processing {Take}.",
-            pendingTasks.Count, tasksToProcess.Count);
+        logger.LogInformation("[Worker] 📋 Found {Count} inqueue | Idle providers: {Idle} | Dispatching: {Take}",
+            pendingTasks.Count, idleCount, tasksToProcess.Count);
 
-        // Update semua ke "running" terlebih dahulu
+        // Dispatch masing-masing task secara independen (fire-and-forget)
         foreach (var task in tasksToProcess)
         {
+            // Baca file size untuk menentukan provider yang cocok
+            long fileSize = 0;
+            if (!string.IsNullOrEmpty(task.FullPath) && File.Exists(task.FullPath))
+                fileSize = new FileInfo(task.FullPath).Length;
+
+            var providerSlot = providerManager.AcquireProviderForFileSize(fileSize);
+            if (providerSlot == null)
+            {
+                logger.LogWarning("[Worker] ⚠️ No suitable provider for TaskId={Id} (FileSize={Size}MB). Will retry next cycle.",
+                    task.Id, fileSize / (1024 * 1024));
+                break; // Tunggu cycle berikutnya
+            }
+
+            // Update ke "running" sebelum dispatch
             task.Status = "running";
             task.UpdatedAt = DateTime.Now;
             await pollingRepo.UpdateAsync(task);
+
+            // Fire-and-forget: dispatch tanpa await, jalan di background
+            _ = ProcessTaskAsync(task, providerSlot, ct);
+
+            logger.LogInformation("[Worker] 🚀 Dispatched TaskId={Id} → {Provider} (FileSize={Size}MB)",
+                task.Id, providerSlot.Provider.WebAiName, fileSize / (1024 * 1024));
         }
-
-        // Process secara parallel
-        var processingTasks = new List<Task>();
-        foreach (var task in tasksToProcess)
-        {
-            var providerSlot = providerManager.AcquireIdleProvider();
-            if (providerSlot == null)
-            {
-                logger.LogWarning("[Worker] ⚠️ No idle provider for TaskId={Id}. Will retry next cycle.", task.Id);
-                // Revert to inqueue
-                task.Status = "inqueue";
-                task.UpdatedAt = DateTime.Now;
-                await pollingRepo.UpdateAsync(task);
-                continue;
-            }
-
-            processingTasks.Add(ProcessTaskAsync(task, providerSlot, ct));
-        }
-
-        if (processingTasks.Count > 0)
-            await Task.WhenAll(processingTasks);
     }
 
+    /// <summary>
+    /// Proses 1 task secara independen. Setelah selesai, release provider slot otomatis.
+    /// </summary>
     private async Task ProcessTaskAsync(
         AgentPollingTaskDocument task,
         ProviderSlot providerSlot,
         CancellationToken ct)
     {
-        await _concurrencyLimiter.WaitAsync(ct);
         try
         {
-            logger.LogInformation("[Worker] 🚀 Processing TaskId={Id}, DocId={DocId}, Provider={Provider}",
+            logger.LogInformation("[Worker] � Start processing TaskId={Id}, DocId={DocId}, Provider={Provider}",
                 task.Id, task.DocumentId, providerSlot.Provider.WebAiName);
 
             using var scope = scopeFactory.CreateScope();
@@ -132,31 +142,40 @@ public class Worker(
         {
             logger.LogError(ex, "[Worker] ✗ TaskId={Id} failed: {Msg}", task.Id, ex.Message);
 
-            using var failScope = scopeFactory.CreateScope();
-            var failRepo = failScope.ServiceProvider.GetRequiredService<IAgentPollingTaskDocumentRepository>();
-
-            // Mark current as failed
-            task.Status = "failed";
-            task.UpdatedAt = DateTime.Now;
-            await failRepo.UpdateAsync(task);
-
-            // Re-queue: buat data baru untuk di-retry nanti
-            var retryTask = new AgentPollingTaskDocument
+            try
             {
-                DocumentId = task.DocumentId,
-                TaskCode = "Init-New-Doc",
-                Status = "inqueue",
-                FullPath = task.FullPath,
-                InsertedBy = task.InsertedBy,
-                InsertedAt = DateTime.Now
-            };
-            await failRepo.InsertAsync(retryTask);
-            logger.LogInformation("[Worker] 🔄 Re-queued TaskId={Id} as new inqueue entry.", task.Id);
+                using var failScope = scopeFactory.CreateScope();
+                var failRepo = failScope.ServiceProvider.GetRequiredService<IAgentPollingTaskDocumentRepository>();
+
+                // Mark current as failed
+                task.Status = "failed";
+                task.UpdatedAt = DateTime.Now;
+                await failRepo.UpdateAsync(task);
+
+                // Re-queue: buat data baru untuk di-retry nanti
+                var retryTask = new AgentPollingTaskDocument
+                {
+                    DocumentId = task.DocumentId,
+                    TaskCode = "Init-New-Doc",
+                    Status = "inqueue",
+                    FullPath = task.FullPath,
+                    InsertedBy = task.InsertedBy,
+                    InsertedAt = DateTime.Now
+                };
+                await failRepo.InsertAsync(retryTask);
+                logger.LogInformation("[Worker] 🔄 Re-queued TaskId={Id} as new inqueue entry.", task.Id);
+            }
+            catch (Exception retryEx)
+            {
+                logger.LogError(retryEx, "[Worker] ✗ Failed to re-queue TaskId={Id}", task.Id);
+            }
         }
         finally
         {
+            // Release provider slot → langsung tersedia untuk task berikutnya
             providerManager.ReleaseProvider(providerSlot.Provider.WebAiName);
-            _concurrencyLimiter.Release();
+            logger.LogInformation("[Worker] 🔓 Provider {Provider} released, ready for next task.",
+                providerSlot.Provider.WebAiName);
         }
     }
 }

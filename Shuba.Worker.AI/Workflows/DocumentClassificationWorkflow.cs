@@ -12,13 +12,15 @@ namespace Shuba.Worker.AI.Workflows;
 
 /// <summary>
 /// Workflow per-dokumen:
-/// 1. Baca file content dari FullPath
-/// 2. Kirim ke Web AI provider → parse JSON response
-/// 3. Update TblDocuments (CategoryName, SubCategoryName, DocumentTypeName)
-/// 4. Update TblDocumentFiles (DocumentSummary = Summary + Points)
+/// 1. Cek file size → tentukan strategi (direct / split-chunked)
+/// 2. Upload file ke Web AI provider (single atau multi-part)
+/// 3. Parse JSON response → Update TblDocuments + TblDocumentFiles
 /// </summary>
 public class DocumentClassificationWorkflow
 {
+    private const long SIZE_20MB = 20L * 1024 * 1024;
+    private const long SIZE_50MB = 50L * 1024 * 1024;
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly WebAiOrchestrator _orchestrator;
     private readonly ILogger<DocumentClassificationWorkflow> _logger;
@@ -44,36 +46,37 @@ public class DocumentClassificationWorkflow
         CancellationToken ct)
     {
         var sessionId = task.Id.ToString();
-        _logger.LogInformation("[Workflow] 📄 Processing DocId={DocId} via {Provider}",
-            task.DocumentId, providerSlot.Provider.WebAiName);
+        var providerName = providerSlot.Provider.WebAiName;
 
-        // Step 1: Baca konten file
-        var fileContent = await ReadFileContentAsync(task.FullPath);
-        if (string.IsNullOrWhiteSpace(fileContent))
+        _logger.LogInformation("[Workflow] 📄 Processing DocId={DocId} via {Provider}",
+            task.DocumentId, providerName);
+
+        // Validasi file
+        if (string.IsNullOrEmpty(task.FullPath) || !File.Exists(task.FullPath))
         {
-            _logger.LogWarning("[Workflow] ⚠️ File kosong atau tidak bisa dibaca: {Path}", task.FullPath);
-            throw new Exception($"Cannot read file content from: {task.FullPath}");
+            _logger.LogWarning("[Workflow] ⚠️ File tidak ditemukan: {Path}", task.FullPath);
+            throw new Exception($"File not found: {task.FullPath}");
         }
 
-        // Limit konten agar tidak terlalu panjang untuk Web AI
-        if (fileContent.Length > 15000)
-            fileContent = fileContent[..15000] + "\n\n[... konten terpotong ...]";
+        var fileInfo = new FileInfo(task.FullPath);
+        var fileSize = fileInfo.Length;
+        _logger.LogInformation("[Workflow] 📏 File size: {Size}MB, Provider: {Provider}",
+            fileSize / (1024 * 1024), providerName);
 
-        // Step 2: Kirim ke Web AI
-        var systemPrompt = ClassificationPrompt.Build(fileContent);
-        var userMessage = ClassificationPrompt.UserMessage;
+        // Tentukan strategi
+        string rawResponse;
+        var needsChunking = NeedsChunking(fileSize, providerName);
 
-        var rawResponse = await _orchestrator.AskAsync(
-            providerSlot.Provider,
-            providerSlot.Selectors,
-            systemPrompt,
-            userMessage,
-            sessionId,
-            ct);
+        if (needsChunking)
+        {
+            rawResponse = await ExecuteChunkedUploadAsync(task, providerSlot, fileSize, sessionId, ct);
+        }
+        else
+        {
+            rawResponse = await ExecuteDirectUploadAsync(task, providerSlot, sessionId, ct);
+        }
 
-        _logger.LogInformation("[Workflow] 📩 Raw response length: {Len} chars", rawResponse?.Length ?? 0);
-
-        // Step 3: Parse JSON response
+        // Parse JSON response
         var result = ParseClassificationResponse(rawResponse);
         if (result == null)
         {
@@ -84,13 +87,151 @@ public class DocumentClassificationWorkflow
         _logger.LogInformation("[Workflow] ✅ Parsed: Category={Cat}, SubCat={Sub}, DocType={Type}",
             result.Category, result.SubCategory, result.DocumentType);
 
-        // Step 4: Update database
+        // Update database
+        await UpdateDatabaseAsync(task.DocumentId, result, ct);
+    }
+
+    // ────────────────────────────────────────────────────────
+    //  STRATEGY: DIRECT UPLOAD (< 20MB, atau DS/ZAI < 50MB)
+    // ────────────────────────────────────────────────────────
+
+    private async Task<string> ExecuteDirectUploadAsync(
+        AgentPollingTaskDocument task,
+        ProviderSlot providerSlot,
+        string sessionId,
+        CancellationToken ct)
+    {
+        _logger.LogInformation("[Workflow] 📤 Direct upload: {Path}", task.FullPath);
+
+        var systemPrompt = ClassificationPrompt.Build("");
+        var userMessage = ClassificationPrompt.UserMessage;
+
+        return await _orchestrator.AskAsync(
+            providerSlot.Provider,
+            providerSlot.Selectors,
+            systemPrompt,
+            userMessage,
+            sessionId,
+            filePaths: new List<string> { task.FullPath! },
+            ct: ct);
+    }
+
+    // ────────────────────────────────────────────────────────
+    //  STRATEGY: CHUNKED UPLOAD (file besar, multi-part)
+    // ────────────────────────────────────────────────────────
+
+    private async Task<string> ExecuteChunkedUploadAsync(
+        AgentPollingTaskDocument task,
+        ProviderSlot providerSlot,
+        long fileSize,
+        string sessionId,
+        CancellationToken ct)
+    {
+        var chunkSize = FileSplitter.GetChunkSizeForProvider(providerSlot.Provider.WebAiName);
+        var taskGuid = task.Id;
+
+        _logger.LogInformation("[Workflow] 📦 Chunked upload: FileSize={Size}MB, ChunkSize={Chunk}MB",
+            fileSize / (1024 * 1024), chunkSize / (1024 * 1024));
+
+        // Split file ke temp directory
+        var chunks = await FileSplitter.SplitFileAsync(task.FullPath!, chunkSize, taskGuid);
+        var totalParts = chunks.Count;
+
+        _logger.LogInformation("[Workflow] 📦 Split into {Count} chunks", totalParts);
+
+        try
+        {
+            string rawResponse = string.Empty;
+
+            for (int i = 0; i < totalParts; i++)
+            {
+                var partNumber = i + 1;
+                var chunkPath = chunks[i];
+                var isLast = partNumber == totalParts;
+
+                string prompt;
+                string userMsg;
+
+                if (isLast)
+                {
+                    // Chunk terakhir: prompt klasifikasi asli
+                    prompt = ChunkedUploadPrompt.BuildFinalPrompt(partNumber, totalParts)
+                           + ClassificationPrompt.Build("");
+                    userMsg = ChunkedUploadPrompt.ChunkUserMessage(partNumber, totalParts);
+                }
+                else if (partNumber == 1)
+                {
+                    // Chunk pertama: intro
+                    prompt = ChunkedUploadPrompt.BuildIntroPrompt(partNumber, totalParts);
+                    userMsg = ChunkedUploadPrompt.ChunkUserMessage(partNumber, totalParts);
+                }
+                else
+                {
+                    // Chunk tengah
+                    prompt = ChunkedUploadPrompt.BuildMiddlePrompt(partNumber, totalParts);
+                    userMsg = ChunkedUploadPrompt.ChunkUserMessage(partNumber, totalParts);
+                }
+
+                _logger.LogInformation("[Workflow] 📤 Uploading chunk {Part}/{Total}: {Path}",
+                    partNumber, totalParts, Path.GetFileName(chunkPath));
+
+                rawResponse = await _orchestrator.AskAsync(
+                    providerSlot.Provider,
+                    providerSlot.Selectors,
+                    prompt,
+                    userMsg,
+                    sessionId,
+                    filePaths: new List<string> { chunkPath },
+                    ct: ct);
+
+                if (!isLast)
+                {
+                    _logger.LogInformation("[Workflow] ⏳ Chunk {Part}/{Total} uploaded, waiting before next...",
+                        partNumber, totalParts);
+                    await Task.Delay(3000, ct); // jeda antar chunk
+                }
+            }
+
+            return rawResponse;
+        }
+        finally
+        {
+            // Cleanup temp files
+            FileSplitter.CleanupTempFiles(taskGuid);
+        }
+    }
+
+    // ────────────────────────────────────────────────────────
+    //  DECISION: PERLU CHUNKING ATAU TIDAK?
+    // ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Menentukan apakah file perlu di-chunk:
+    /// - Qwen: chunk jika > 20MB (per 19MB)
+    /// - DS/ZAI: chunk jika > 50MB (per 45MB)
+    /// </summary>
+    private static bool NeedsChunking(long fileSize, string providerName)
+    {
+        var isQwen = providerName.Contains("Qwen", StringComparison.OrdinalIgnoreCase);
+
+        if (isQwen)
+            return fileSize > SIZE_20MB; // Qwen: chunk di atas 20MB
+
+        return fileSize > SIZE_50MB; // DS/ZAI: chunk di atas 50MB
+    }
+
+    // ────────────────────────────────────────────────────────
+    //  DATABASE UPDATE
+    // ────────────────────────────────────────────────────────
+
+    private async Task UpdateDatabaseAsync(int documentId, ClassificationResult result, CancellationToken ct)
+    {
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
         // Update TblDocuments
         var document = await dbContext.Set<Documents>()
-            .FirstOrDefaultAsync(d => d.Id == task.DocumentId, ct);
+            .FirstOrDefaultAsync(d => d.Id == documentId, ct);
 
         if (document != null)
         {
@@ -103,7 +244,7 @@ public class DocumentClassificationWorkflow
         // Update TblDocumentFiles — set DocumentSummary
         var summaryContent = BuildSummaryContent(result.Summary, result.Points);
         var docFiles = await dbContext.Set<DocumentFiles>()
-            .Where(df => df.DocumentID == task.DocumentId)
+            .Where(df => df.DocumentID == documentId)
             .ToListAsync(ct);
 
         foreach (var docFile in docFiles)
@@ -113,27 +254,12 @@ public class DocumentClassificationWorkflow
         }
 
         await dbContext.SaveChangesAsync(ct);
-        _logger.LogInformation("[Workflow] 💾 Database updated for DocId={DocId}", task.DocumentId);
+        _logger.LogInformation("[Workflow] 💾 Database updated for DocId={DocId}", documentId);
     }
 
     // ────────────────────────────────────────────────────────
     //  HELPERS
     // ────────────────────────────────────────────────────────
-
-    private static async Task<string?> ReadFileContentAsync(string? fullPath)
-    {
-        if (string.IsNullOrWhiteSpace(fullPath) || !File.Exists(fullPath))
-            return null;
-
-        try
-        {
-            return await File.ReadAllTextAsync(fullPath);
-        }
-        catch
-        {
-            return null;
-        }
-    }
 
     private static string BuildSummaryContent(string? summary, string? points)
     {
@@ -152,7 +278,6 @@ public class DocumentClassificationWorkflow
 
         try
         {
-            // Try to find JSON object in the response
             var json = ExtractJsonFromRaw(raw);
             if (json == null) return null;
 
@@ -167,11 +292,9 @@ public class DocumentClassificationWorkflow
 
     private static string? ExtractJsonFromRaw(string raw)
     {
-        // Find opening brace
         int start = raw.IndexOf('{');
         if (start < 0) return null;
 
-        // Find matching closing brace
         int depth = 0;
         bool inString = false;
         bool escape = false;

@@ -221,6 +221,244 @@ public static class SFCoreWebAIBrowser
     }
 
     // ────────────────────────────────────────────────────────
+    //  UPLOAD FILE
+    // ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Upload file ke Web AI — route berdasarkan provider name:
+    /// - DeepSeek: HumanCursor klik button upload (📎) → FileChooser langsung terbuka
+    /// - Qwen: HumanCursor klik "+" → menu muncul → HumanCursor klik "Upload attachment" → FileChooser
+    /// - ZAI: HumanCursor klik button#upload-file-button → FileChooser langsung terbuka
+    /// </summary>
+    public static async Task UploadFile(IPage page, IList<WebAiSelector> selectors, string filePath, string providerName)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException($"File not found: {filePath}");
+
+        // Cek apakah perlu rename (file programming yang mungkin di-block)
+        string finalFilePath = filePath;
+        bool isRenamed = false;
+
+        if (FileTypeHelper.NeedsRename(filePath))
+        {
+            Console.WriteLine($"[Upload-{providerName}] 🔄 Programming file detected, creating renamed copy...");
+            finalFilePath = FileTypeHelper.CreateRenamedCopy(filePath);
+            isRenamed = true;
+        }
+
+        Console.WriteLine($"[Upload-{providerName}] 📎 Uploading: {Path.GetFileName(finalFilePath)}");
+
+        try
+        {
+            // Route berdasarkan provider name
+            if (providerName.Contains("Qwen", StringComparison.OrdinalIgnoreCase))
+            {
+                // Qwen: klik "+" → menu → klik "Upload attachment" → FileChooser
+                await UploadQwen(page, selectors, finalFilePath);
+            }
+            else
+            {
+                // DeepSeek & ZAI: klik button upload → langsung FileChooser
+                await UploadDirectButton(page, selectors, finalFilePath, providerName);
+            }
+
+            Console.WriteLine($"[Upload-{providerName}] ✅ File uploaded: {Path.GetFileName(finalFilePath)}");
+            await NaturalDelay();
+        }
+        finally
+        {
+            if (isRenamed && finalFilePath != filePath)
+            {
+                FileTypeHelper.CleanupRenamedFile(finalFilePath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// DeepSeek & ZAI: HumanCursor klik button upload → FileChooser langsung terbuka → set file.
+    /// </summary>
+    private static async Task UploadDirectButton(
+        IPage page, IList<WebAiSelector> selectors, string filePath, string providerName)
+    {
+        Console.WriteLine($"[Upload-{providerName}] 📤 HumanCursor → klik upload button → FileChooser...");
+
+        var candidates = selectors
+            .Where(s => s.SelectorType == "Button-Upload")
+            .OrderBy(s => s.SelectorIndex)
+            .ToList();
+
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                var locator = PlaywrightLocatorResolver.Resolve(page, candidate.LocatorStrategy, candidate.SelectorElement);
+                var count = await locator.CountAsync();
+                if (count == 0) continue;
+                if (!await locator.IsVisibleAsync()) continue;
+
+                // HumanCursor klik button dan tunggu FileChooser
+                var fileChooser = await page.RunAndWaitForFileChooserAsync(async () =>
+                {
+                    await HybridMoveAndClick(page, locator, $"{providerName}-Upload");
+                }, new PageRunAndWaitForFileChooserOptions { Timeout = 10_000 });
+
+                await Task.Delay(1500);
+                await fileChooser.SetFilesAsync(filePath);
+                await Task.Delay(2000);
+
+                Console.WriteLine($"[Upload-{providerName}] ✅ File set via FileChooser.");
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Upload-{providerName}] ⏭️ Failed with '{candidate.SelectorElement}': {ex.Message}");
+            }
+        }
+
+        // Fallback: hidden input
+        await UploadViaHiddenInput(page, selectors, filePath);
+    }
+
+    /// <summary>
+    /// Qwen: HumanCursor klik "+" (mode-select-open) → menu ant-dropdown muncul
+    ///       → HumanCursor klik "Upload attachment" (li[data-menu-id*='upload'])
+    ///       → set file via input#filesUpload
+    /// </summary>
+    private static async Task UploadQwen(
+        IPage page, IList<WebAiSelector> selectors, string filePath)
+    {
+        Console.WriteLine("[Upload-Qwen] 📤 HumanCursor → klik '+' → menu → 'Upload attachment'...");
+
+        // Step 1: HumanCursor klik tombol "+" (Button-Plus)
+        var plusButtons = selectors
+            .Where(s => s.SelectorType == "Button-Plus")
+            .OrderBy(s => s.SelectorIndex)
+            .ToList();
+
+        bool menuOpened = false;
+        foreach (var btn in plusButtons)
+        {
+            try
+            {
+                var locator = PlaywrightLocatorResolver.Resolve(page, btn.LocatorStrategy, btn.SelectorElement);
+                if (await locator.CountAsync() > 0 && await locator.IsVisibleAsync())
+                {
+                    await HybridMoveAndClick(page, locator, "Qwen-Plus");
+                    await Task.Delay(2000); // tunggu menu ant-dropdown muncul
+                    menuOpened = true;
+                    Console.WriteLine("[Upload-Qwen] ✅ '+' clicked, menu opened.");
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Upload-Qwen] ⏭️ Plus button failed: {ex.Message}");
+            }
+        }
+
+        if (!menuOpened)
+            throw new Exception("[Upload-Qwen] Could not find or click '+' button.");
+
+        // Step 2: HumanCursor klik menu item "Upload attachment"
+        var menuItems = selectors
+            .Where(s => s.SelectorType == "Menu-Upload")
+            .OrderBy(s => s.SelectorIndex)
+            .ToList();
+
+        foreach (var item in menuItems)
+        {
+            try
+            {
+                var locator = PlaywrightLocatorResolver.Resolve(page, item.LocatorStrategy, item.SelectorElement);
+                if (await locator.CountAsync() > 0 && await locator.IsVisibleAsync())
+                {
+                    // Klik menu item — Qwen punya input#filesUpload yang hidden,
+                    // jadi setelah klik menu "Upload attachment", FileChooser harus terbuka
+                    try
+                    {
+                        var fileChooser = await page.RunAndWaitForFileChooserAsync(async () =>
+                        {
+                            await HybridMoveAndClick(page, locator, "Qwen-Upload-Menu");
+                        }, new PageRunAndWaitForFileChooserOptions { Timeout = 10_000 });
+
+                        await Task.Delay(1500);
+                        await fileChooser.SetFilesAsync(filePath);
+                        await Task.Delay(2000);
+                        Console.WriteLine("[Upload-Qwen] ✅ File set via FileChooser.");
+                        return;
+                    }
+                    catch (TimeoutException)
+                    {
+                        // Fallback: Qwen mungkin set file via hidden input#filesUpload langsung
+                        Console.WriteLine("[Upload-Qwen] ⚠️ FileChooser timeout, trying input#filesUpload...");
+                        await HybridMoveAndClick(page, locator, "Qwen-Upload-Menu");
+                        await Task.Delay(1500);
+                        await UploadViaHiddenInput(page, selectors, filePath);
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Upload-Qwen] ⏭️ Menu item failed: {ex.Message}");
+            }
+        }
+
+        // Fallback: langsung set di hidden input
+        Console.WriteLine("[Upload-Qwen] ⚠️ Menu items all failed, trying hidden input...");
+        await UploadViaHiddenInput(page, selectors, filePath);
+    }
+
+
+
+    /// <summary>
+    /// Fallback: set file langsung via hidden input[type=file].
+    /// </summary>
+    private static async Task UploadViaHiddenInput(
+        IPage page, IList<WebAiSelector> selectors, string filePath)
+    {
+        Console.WriteLine("[Upload-Fallback] 🔍 Trying hidden input[type=file]...");
+
+        var fileInputs = selectors
+            .Where(s => s.SelectorType == "File-Input")
+            .OrderBy(s => s.SelectorIndex)
+            .ToList();
+
+        // Jika tidak ada File-Input selector, coba default
+        if (fileInputs.Count == 0)
+        {
+            fileInputs.Add(new WebAiSelector
+            {
+                SelectorType = "File-Input",
+                SelectorIndex = 1,
+                LocatorStrategy = "css",
+                SelectorElement = "input[type='file']"
+            });
+        }
+
+        foreach (var fi in fileInputs)
+        {
+            try
+            {
+                var locator = PlaywrightLocatorResolver.Resolve(page, fi.LocatorStrategy, fi.SelectorElement);
+                if (await locator.CountAsync() > 0)
+                {
+                    await locator.SetInputFilesAsync(filePath);
+                    await Task.Delay(2000);
+                    Console.WriteLine("[Upload-Fallback] ✅ File set via hidden input.");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Upload-Fallback] ⏭️ Failed: {ex.Message}");
+            }
+        }
+
+        throw new Exception("All upload methods failed. Could not upload file.");
+    }
+
+    // ────────────────────────────────────────────────────────
     //  SEND MESSAGE (combined)
     // ────────────────────────────────────────────────────────
 

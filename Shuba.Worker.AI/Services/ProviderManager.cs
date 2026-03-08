@@ -54,7 +54,7 @@ public class ProviderManager
             {
                 if (!_providerBusy[slot.Provider.WebAiName])
                 {
-                    _providerBusy[slot.Provider.WebAiName] = true; // mark busy
+                    _providerBusy[slot.Provider.WebAiName] = true;
                     Console.WriteLine($"[ProviderManager] 🔒 Acquired: {slot.Provider.WebAiName}");
                     return slot;
                 }
@@ -63,6 +63,86 @@ public class ProviderManager
         Console.WriteLine("[ProviderManager] ⚠️ All providers busy!");
         return null;
     }
+
+    /// <summary>
+    /// Acquire provider based on file size:
+    /// - < 20MB  → any provider
+    /// - 20-80MB → prefer DeepSeek/ZAI, tapi Qwen juga bisa (akan di-chunk 19MB)
+    /// - > 80MB  → HANYA DeepSeek/ZAI
+    /// </summary>
+    public ProviderSlot? AcquireProviderForFileSize(long fileSizeBytes)
+    {
+        const long SIZE_20MB = 20L * 1024 * 1024;
+        const long SIZE_80MB = 80L * 1024 * 1024;
+
+        lock (_lock)
+        {
+            if (fileSizeBytes > SIZE_80MB)
+            {
+                // > 80MB: HANYA DeepSeek atau ZAI
+                foreach (var slot in _slots)
+                {
+                    if (!_providerBusy[slot.Provider.WebAiName] && IsLargeFileProvider(slot.Provider.WebAiName))
+                    {
+                        _providerBusy[slot.Provider.WebAiName] = true;
+                        Console.WriteLine($"[ProviderManager] 🔒 Acquired (>80MB): {slot.Provider.WebAiName}");
+                        return slot;
+                    }
+                }
+                Console.WriteLine("[ProviderManager] ⚠️ >80MB file but DS/ZAI busy. Will retry.");
+                return null;
+            }
+
+            if (fileSizeBytes > SIZE_20MB)
+            {
+                // 20-80MB: prefer DeepSeek/ZAI, fallback Qwen
+                foreach (var slot in _slots)
+                {
+                    if (!_providerBusy[slot.Provider.WebAiName] && IsLargeFileProvider(slot.Provider.WebAiName))
+                    {
+                        _providerBusy[slot.Provider.WebAiName] = true;
+                        Console.WriteLine($"[ProviderManager] 🔒 Acquired (20-80MB, preferred): {slot.Provider.WebAiName}");
+                        return slot;
+                    }
+                }
+                // Fallback: Qwen (will be chunked to 19MB)
+                foreach (var slot in _slots)
+                {
+                    if (!_providerBusy[slot.Provider.WebAiName])
+                    {
+                        _providerBusy[slot.Provider.WebAiName] = true;
+                        Console.WriteLine($"[ProviderManager] 🔒 Acquired (20-80MB, fallback Qwen): {slot.Provider.WebAiName}");
+                        return slot;
+                    }
+                }
+                Console.WriteLine("[ProviderManager] ⚠️ All providers busy for 20-80MB file.");
+                return null;
+            }
+
+            // < 20MB: any provider
+            return AcquireIdleProviderInternal();
+        }
+    }
+
+    private ProviderSlot? AcquireIdleProviderInternal()
+    {
+        foreach (var slot in _slots)
+        {
+            if (!_providerBusy[slot.Provider.WebAiName])
+            {
+                _providerBusy[slot.Provider.WebAiName] = true;
+                Console.WriteLine($"[ProviderManager] 🔒 Acquired (<20MB): {slot.Provider.WebAiName}");
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// DeepSeek dan ZAI bisa handle file besar.
+    /// </summary>
+    public static bool IsLargeFileProvider(string providerName)
+        => !providerName.Contains("Qwen", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Release a provider slot back to idle.
