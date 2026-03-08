@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Shuba.Worker.AI-428e1d85-cd52-4020-982c-12612accd9c0</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    <PackageReference Include="HumanCursor.Playwright" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.58.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataAccess\Api.DataAccess\Api.DataAccess.csproj" />
+    <ProjectReference Include="..\DataAccess\Api.Repository\Api.Repository.csproj" />
+    <ProjectReference Include="..\DataAccess\Api.Services\Api.Services.csproj" />
+    <ProjectReference Include="..\Api.Extensions\Api.Extensions.csproj" />
+  </ItemGroup>
+</Project>

@@ -417,7 +417,7 @@ export default function Index() {
                         {item.attributeType == "date"
                           ? dayjs.utc(item.value).format("YYYY-MM-DD")
                           : item.attributeType == "checkbox"
-                            ? item.value.join(", ")
+                            ? (item.value || []).join(", ")
                             : item.value}
                       </span>
                       <Divider style={{ margin: "10px 0px" }}></Divider>

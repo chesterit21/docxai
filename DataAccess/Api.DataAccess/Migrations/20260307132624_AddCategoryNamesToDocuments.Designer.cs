@@ -3,6 +3,7 @@ using System;
 using Api.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -12,9 +13,11 @@ using NpgsqlTypes;
 namespace Api.DataAccess.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260307132624_AddCategoryNamesToDocuments")]
+    partial class AddCategoryNamesToDocuments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1381,126 +1384,6 @@ namespace Api.DataAccess.Migrations
                     b.ToTable("TblMsRoleMatrix");
                 });
 
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmAttributeSynonyms", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AttributeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AttributeName")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<DateTime>("InsertedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int>("InsertedBy")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("varchar(5)");
-
-                    b.Property<string>("Synonym")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttributeId");
-
-                    b.ToTable("TmAttributeSynonyms");
-                });
-
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmDocumentType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<string>("DocumentType")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<DateTime>("InsertedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int>("InsertedBy")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("SubCategoryName")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TmDocumentType");
-                });
-
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmDocumentTypeAttributes", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AttributeName")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<string>("DataType")
-                        .IsRequired()
-                        .HasColumnType("varchar(250)");
-
-                    b.Property<Guid>("DocumentTypeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("InsertedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int>("InsertedBy")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DocumentTypeId");
-
-                    b.ToTable("TmDocumentTypeAttributes");
-                });
-
             modelBuilder.Entity("Api.DataAccess.Models.Masters.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -2399,28 +2282,6 @@ namespace Api.DataAccess.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmAttributeSynonyms", b =>
-                {
-                    b.HasOne("Api.DataAccess.Models.Masters.TmDocumentTypeAttributes", "Attribute")
-                        .WithMany("Synonyms")
-                        .HasForeignKey("AttributeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Attribute");
-                });
-
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmDocumentTypeAttributes", b =>
-                {
-                    b.HasOne("Api.DataAccess.Models.Masters.TmDocumentType", "DocumentType")
-                        .WithMany("Attributes")
-                        .HasForeignKey("DocumentTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DocumentType");
-                });
-
             modelBuilder.Entity("Api.DataAccess.Models.Masters.User", b =>
                 {
                     b.HasOne("Api.DataAccess.Models.Masters.Company", "Company")
@@ -2583,16 +2444,6 @@ namespace Api.DataAccess.Migrations
                     b.Navigation("RoleMatrices");
 
                     b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmDocumentType", b =>
-                {
-                    b.Navigation("Attributes");
-                });
-
-            modelBuilder.Entity("Api.DataAccess.Models.Masters.TmDocumentTypeAttributes", b =>
-                {
-                    b.Navigation("Synonyms");
                 });
 
             modelBuilder.Entity("Api.DataAccess.Models.Masters.User", b =>

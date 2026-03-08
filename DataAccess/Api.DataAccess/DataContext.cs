@@ -20,16 +20,16 @@ namespace Api.DataAccess
 {
     public class DataContext : DbContext
     {
-		readonly IHttpContextAccessor accessor;
-		public int DatePart(string datePartArg, DateTimeOffset? date) => throw new InvalidOperationException($"{nameof(DatePart)} cannot be called client side.");
+        readonly IHttpContextAccessor accessor;
+        public int DatePart(string datePartArg, DateTimeOffset? date) => throw new InvalidOperationException($"{nameof(DatePart)} cannot be called client side.");
 
 
-		public DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor accessor)
+        public DataContext(DbContextOptions<DataContext> options, IHttpContextAccessor accessor)
             : base(options)
         {
             ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
             this.accessor = accessor;
-		}
+        }
 
         public DbSet<Categories> Categories { get; set; }
         public DbSet<CategoriesShared> CategoriesShared { get; set; }
@@ -45,11 +45,11 @@ namespace Api.DataAccess
         public DbSet<AttributeCollections> AttributeCollections { get; set; }
         public DbSet<DocumentSharedPrivillege> DocumentSharedPrivillege { get; set; }
         public DbSet<Watermarks> Watermarks { get; set; }
-		public DbSet<CategoriesFavorite> CategoriesFavorites { get; set; }
-		public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
-		public DbSet<Notifications> Notifications { get; set; }
+        public DbSet<CategoriesFavorite> CategoriesFavorites { get; set; }
+        public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
+        public DbSet<Notifications> Notifications { get; set; }
 
-		public DbSet<ApplicationLog> ApplicationLog { get; set; }
+        public DbSet<ApplicationLog> ApplicationLog { get; set; }
         public DbSet<AuditTrail> AuditTrail { get; set; }
         public DbSet<TransactionLog> TransactionLog { get; set; }
         public DbSet<HistoryEmail> HistoryEmail { get; set; }
@@ -58,6 +58,9 @@ namespace Api.DataAccess
 
         public DbSet<Company> Company { get; set; }
         public DbSet<Language> Language { get; set; }
+        public DbSet<TmDocumentType> DocumentTypes { get; set; }
+        public DbSet<TmDocumentTypeAttributes> DocumentTypeAttributes { get; set; }
+        public DbSet<TmAttributeSynonyms> AttributeSynonyms { get; set; }
         public DbSet<Menu> Menu { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<RoleMatrix> RoleMatrix { get; set; }
@@ -67,17 +70,20 @@ namespace Api.DataAccess
         public DbSet<UserRole> UserRole { get; set; }
         public DbSet<UserCompany> UserCompany { get; set; }
         public DbSet<Email> Email { get; set; }
-		public DbSet<DocumentReminders> DocumentReminders { get; set; }
+        public DbSet<DocumentReminders> DocumentReminders { get; set; }
         public DbSet<DocumentLog> DocumentLog { get; set; }
-		public DbSet<Group> Group { get; set; }
-		public DbSet<UserGroup> UserGroup { get; set; }
-		public DbSet<DocumentItemList> DocumentItemList { get; set; }
+        public DbSet<Group> Group { get; set; }
+        public DbSet<UserGroup> UserGroup { get; set; }
+        public DbSet<DocumentItemList> DocumentItemList { get; set; }
         public DbSet<ResetPasswordUserVerificationCode> ResetPasswordUserVerificationCode { get; set; }
         public DbSet<DocumentRelated> RelatedDocuments { get; set; }
-		public DbSet<MigrationJob> MigrationJobs { get; set; }
+        public DbSet<MigrationJob> MigrationJobs { get; set; }
         public DbSet<LoginActivityLog> LoginActivityLogs { get; set; }
 
-		public void ChangeTrackingBehavior(QueryTrackingBehavior behavior)
+        public DbSet<AgentPollingTaskDocument> AgentPollingTaskDocuments { get; set; }
+        public DbSet<DocumentExtractedEntities> DocumentExtractedEntities { get; set; }
+
+        public void ChangeTrackingBehavior(QueryTrackingBehavior behavior)
         {
             ChangeTracker.QueryTrackingBehavior = behavior;
         }
@@ -90,76 +96,76 @@ namespace Api.DataAccess
             builder.Properties<DateTime?>().HaveColumnType("timestamp");//TIMESTAMP
         }
 
-		//public int? DatePart(string datePartArg, DateTimeOffset? date) => throw new InvalidOperationException($"{nameof(DatePart)} cannot be called client side.");
+        //public int? DatePart(string datePartArg, DateTimeOffset? date) => throw new InvalidOperationException($"{nameof(DatePart)} cannot be called client side.");
 
-		protected override void OnModelCreating(ModelBuilder modelBuilder)
-		{
-			modelBuilder.HasPostgresExtension("uuid-ossp");
-			modelBuilder
-			.HasDbFunction(() => PgSqlDbFunctions.DatePart(default!, default))
-			.HasName("DATE_PART")
-			.IsBuiltIn();
-			modelBuilder.Entity<MigrationJob>(entity =>
-			{
-				// This tells EF: "Keep the model, but don't create/alter the table in migrations"
-				entity.ToTable("MigrationJobs", t => t.ExcludeFromMigrations());
-			});
-			#region MASTER
-			//modelBuilder.Entity<Company>()
-			//    .ToTable("TblMsCompany")
-			//    .HasKey(x => new { x.CompanyId });
-			#endregion
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.HasPostgresExtension("uuid-ossp");
+            modelBuilder
+            .HasDbFunction(() => PgSqlDbFunctions.DatePart(default!, default))
+            .HasName("DATE_PART")
+            .IsBuiltIn();
+            modelBuilder.Entity<MigrationJob>(entity =>
+            {
+                // This tells EF: "Keep the model, but don't create/alter the table in migrations"
+                entity.ToTable("MigrationJobs", t => t.ExcludeFromMigrations());
+            });
+            #region MASTER
+            //modelBuilder.Entity<Company>()
+            //    .ToTable("TblMsCompany")
+            //    .HasKey(x => new { x.CompanyId });
+            #endregion
 
-			#region NAVIGATION PROPERTY
-			//modelBuilder.Entity<UserRole>()
-			//    .HasOne(s => s.User)
-			//    .WithMany(ta => ta.UserRoles)
-			//    .HasForeignKey(u => u.UserName)
-			//    .OnDelete(DeleteBehavior.NoAction);
+            #region NAVIGATION PROPERTY
+            //modelBuilder.Entity<UserRole>()
+            //    .HasOne(s => s.User)
+            //    .WithMany(ta => ta.UserRoles)
+            //    .HasForeignKey(u => u.UserName)
+            //    .OnDelete(DeleteBehavior.NoAction);
 
-			//modelBuilder.Entity<UserRole>()
-			//    .HasOne(s => s.Group)
-			//    .WithMany(ta => ta.UserRoles)
-			//    .HasForeignKey(u => u.RoleId)
-			//    .OnDelete(DeleteBehavior.NoAction);
+            //modelBuilder.Entity<UserRole>()
+            //    .HasOne(s => s.Group)
+            //    .WithMany(ta => ta.UserRoles)
+            //    .HasForeignKey(u => u.RoleId)
+            //    .OnDelete(DeleteBehavior.NoAction);
 
-			#endregion
+            #endregion
 
-			//modelBuilder.Entity<Entity>().Property(s => s.RoleFeatureId).HasConversion<JsonPrimitiveTypeConverter>();
-			//modelBuilder.Entity<Entity>()
-			//    .Property(p => p.RoleFeatureId)
-			//    .HasConversion(
-			//        entity => JsonConvert.SerializeObject(entity),
-			//        value => JsonConvert.DeserializeObject<List<string>>(value)
-			//    );
+            //modelBuilder.Entity<Entity>().Property(s => s.RoleFeatureId).HasConversion<JsonPrimitiveTypeConverter>();
+            //modelBuilder.Entity<Entity>()
+            //    .Property(p => p.RoleFeatureId)
+            //    .HasConversion(
+            //        entity => JsonConvert.SerializeObject(entity),
+            //        value => JsonConvert.DeserializeObject<List<string>>(value)
+            //    );
 
-			//modelBuilder
-			//.Entity<Entity>()
-			//.OwnsMany(role => role.RoleFeatureId, builder =>
-			//{
-			//    builder.ToJson(); 
-			//});
+            //modelBuilder
+            //.Entity<Entity>()
+            //.OwnsMany(role => role.RoleFeatureId, builder =>
+            //{
+            //    builder.ToJson(); 
+            //});
 
-			// modelBuilder.Entity<User>().HasKey(u => new { u.UserId, u.MailServer }); // Composite key
+            // modelBuilder.Entity<User>().HasKey(u => new { u.UserId, u.MailServer }); // Composite key
 
-			modelBuilder.Entity<ApplicationLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()"); // Use PostgreSQL's uuid_generate_v4() for default value
+            modelBuilder.Entity<ApplicationLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()"); // Use PostgreSQL's uuid_generate_v4() for default value
             modelBuilder.Entity<AuditTrail>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<Email>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<HistoryAuditTrail>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<HistoryEmail>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<HistoryTransactionLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<TransactionLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<Notifications>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<AttributeCollections>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<AttributeCollections>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<CategoriesFavorite>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<DocumentFavorite>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<DocumentLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
-			modelBuilder.Entity<LoginActivityLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<Notifications>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<AttributeCollections>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<AttributeCollections>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<CategoriesFavorite>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<DocumentFavorite>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<DocumentLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<LoginActivityLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
 
-			//modelBuilder.Entity<DocumentFiles>().Property(e => e.SearchVector).HasColumnType("tsvector")
-			//.HasComputedColumnSql("to_tsvector('english', coalesce(\"DocumentFileContent\",''))", stored: true);
-			modelBuilder.Entity<DocumentFiles>().HasGeneratedTsVectorColumn(
+            //modelBuilder.Entity<DocumentFiles>().Property(e => e.SearchVector).HasColumnType("tsvector")
+            //.HasComputedColumnSql("to_tsvector('english', coalesce(\"DocumentFileContent\",''))", stored: true);
+            modelBuilder.Entity<DocumentFiles>().HasGeneratedTsVectorColumn(
                    p => p.SearchVector,
                    "english",
                    p => new { p.DocumentFileContent } // Columns to include
@@ -179,11 +185,11 @@ namespace Api.DataAccess
                 a.HasQueryFilter(p => p.IsActive);
             });
 
-		}
+        }
 
 
-		#region DELETION FLAGS
-		public void MarkAsDeleted(object entity) => MarkDeletion(entity, true);
+        #region DELETION FLAGS
+        public void MarkAsDeleted(object entity) => MarkDeletion(entity, true);
 
         public void MarkAsUndeleted(object entity) => MarkDeletion(entity, false);
 
@@ -201,12 +207,12 @@ namespace Api.DataAccess
 
             Attach(entity);
 
-			//Entry(entity).Property(nameof(BaseEntityDefault.IsActive)).IsModified = false;
-			Entry(entity).Property(nameof(BaseEntityDefault.IsActive)).IsModified = true;
-			//Entry(entity).Property(nameof(BaseEntity.DeletedAt)).IsModified = true;
-			//Entry(entity).Property(nameof(BaseEntity.DeletedBy)).IsModified = true;
+            //Entry(entity).Property(nameof(BaseEntityDefault.IsActive)).IsModified = false;
+            Entry(entity).Property(nameof(BaseEntityDefault.IsActive)).IsModified = true;
+            //Entry(entity).Property(nameof(BaseEntity.DeletedAt)).IsModified = true;
+            //Entry(entity).Property(nameof(BaseEntity.DeletedBy)).IsModified = true;
 
-			base.SaveChanges();
+            base.SaveChanges();
         }
         #endregion
 

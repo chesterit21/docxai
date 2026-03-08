@@ -7,7 +7,7 @@ namespace Api.DataAccess.Models.Dms
 {
     [Table("TblDocuments")]
     public class Documents : BaseEntitySoftDelete, IHasOwner
-	{
+    {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
@@ -35,19 +35,28 @@ namespace Api.DataAccess.Models.Dms
 
         public DateTime? ReminderDateTime { get; set; }
 
-		[Column(TypeName = "integer")]
-		public int? WatermarkID { get; set; }
+        [Column(TypeName = "integer")]
+        public int? WatermarkID { get; set; }
 
-		[ForeignKey(nameof(CategoryID))]
+        [Column(TypeName = "varchar(250)")]
+        public string CategoryName { get; set; }
+
+        [Column(TypeName = "varchar(250)")]
+        public string SubCategoryName { get; set; }
+
+        [Column(TypeName = "varchar(250)")]
+        public string DocumentTypeName { get; set; }
+
+        [ForeignKey(nameof(CategoryID))]
         public virtual Categories Categories { get; set; }
 
         [ForeignKey(nameof(Owner))]
         public virtual User OwnerInfo { get; set; }
 
         public virtual List<DocumentFiles> DocumentFiles { get; set; }
-		public virtual List<DocumentRelated> RelatedDocuments { get; set; }
+        public virtual List<DocumentRelated> RelatedDocuments { get; set; }
 
-		[ForeignKey(nameof(WatermarkID))]
-		public virtual Watermarks Watermark { get; set; }
-	}
+        [ForeignKey(nameof(WatermarkID))]
+        public virtual Watermarks Watermark { get; set; }
+    }
 }

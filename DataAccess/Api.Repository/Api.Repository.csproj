@@ -24,6 +24,12 @@
     <Compile Include="Masters\UserRepository.cs" />
     <Compile Include="Masters\UserGroupRepository.cs" />
     <Compile Include="Masters\UserRoleRepository.cs" />
+    <Compile Include="Masters\DocumentTypeRepository.cs" />
+    <Compile Include="Masters\IDocumentTypeRepository.cs" />
+    <Compile Include="Masters\DocumentTypeAttributesRepository.cs" />
+    <Compile Include="Masters\IDocumentTypeAttributesRepository.cs" />
+    <Compile Include="Masters\AttributeSynonymsRepository.cs" />
+    <Compile Include="Masters\IAttributeSynonymsRepository.cs" />
   </ItemGroup>
 
   <ItemGroup>

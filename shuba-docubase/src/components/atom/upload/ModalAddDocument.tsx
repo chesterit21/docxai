@@ -136,9 +136,9 @@ export default function Index({
         return Upload.LIST_IGNORE;
       }
 
-      const isLt2MB = file.size / 1024 / 1024 < 5;
+      const isLt2MB = file.size / 1024 / 1024 < 20;
       if (!isLt2MB) {
-        message.error("File size cannot be more than 5 MB!");
+        message.error("File size cannot be more than 20 MB!");
         return Upload.LIST_IGNORE;
       }
 
@@ -218,7 +218,7 @@ export default function Index({
                 </p>
                 <p className="ant-upload-hint">
                   jpg, jpeg, png, pdf, doc, docx, xls, xlsx, txt, ppt, pptx
-                  (max. 5MB)
+                  (max. 20MB)
                 </p>
               </Dragger>
             </Form.Item>
