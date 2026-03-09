@@ -14,4 +14,6 @@ public class ProviderConfig
 {
     public string Name { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
+    public IList<Shuba.Worker.AI.WebAI.WebAiSelector> Selectors { get; set; } = new List<Shuba.Worker.AI.WebAI.WebAiSelector>();
 }
+

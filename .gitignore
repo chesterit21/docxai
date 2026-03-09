@@ -364,3 +364,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 Shuba.Worker.AI/Shuba.Worker.AI.csproj
+/Shuba.Worker.AI/Shuba.Worker.AI.csproj

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Shuba.Worker.AI.Models;
 using Shuba.Worker.AI.WebAI;
-using Shuba.Worker.AI.WebAI.Selectors;
+
 
 namespace Shuba.Worker.AI.Services;
 
@@ -23,17 +23,17 @@ public class ProviderManager
             new()
             {
                 Provider = new WebAiProvider { WebAiName = settings.DeepSeek.Name, WebAiUrl = settings.DeepSeek.Url },
-                Selectors = DeepSeekSelectors.Get()
+                Selectors = settings.DeepSeek.Selectors
             },
             new()
             {
                 Provider = new WebAiProvider { WebAiName = settings.Qwen.Name, WebAiUrl = settings.Qwen.Url },
-                Selectors = QwenSelectors.Get()
+                Selectors = settings.Qwen.Selectors
             },
             new()
             {
                 Provider = new WebAiProvider { WebAiName = settings.ZAi.Name, WebAiUrl = settings.ZAi.Url },
-                Selectors = ZAiSelectors.Get()
+                Selectors = settings.ZAi.Selectors
             }
         };
 
