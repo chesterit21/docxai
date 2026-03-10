@@ -16,12 +16,7 @@ CREATE TABLE IF NOT EXISTS ""TmDocumentType"" (
     ""Id""              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     ""CategoryName""      VARCHAR(250) NOT NULL,
     ""SubCategoryName""      VARCHAR(250) NOT NULL,
-    ""DocumentType""      VARCHAR(250) NOT NULL,
-    ""InsertedBy"" integer NOT NULL DEFAULT 0,
-    ""InsertedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""UpdatedBy"" integer NULL,
-    ""UpdatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""IsActive"" boolean NOT NULL DEFAULT TRUE
+    ""DocumentType""      VARCHAR(250) NOT NULL
 );
 
 CREATE INDEX ""IX_TmDocumentType_Category"" ON public.""TmDocumentType"" USING btree (""CategoryName"");
@@ -33,11 +28,6 @@ CREATE TABLE IF NOT EXISTS ""TmDocumentTypeAttributes"" (
     ""DocumentTypeId""      UUID NOT NULL,
     ""AttributeName""      VARCHAR(250) NOT NULL,
     ""DataType""      VARCHAR(250) NOT NULL,
-    ""InsertedBy"" integer NOT NULL DEFAULT 0,
-    ""InsertedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""UpdatedBy"" integer NULL,
-    ""UpdatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
     CONSTRAINT FK_TmDocumentTypeAttributes_TmDocumentType_DocumentTypeId FOREIGN key(""DocumentTypeId"") REFERENCES ""TmDocumentType""(""Id"")
 );
 
@@ -47,19 +37,11 @@ CREATE INDEX ""IX_TmDocumentTypeAttributes_DataType"" ON public.""TmDocumentType
 
 CREATE TABLE IF NOT EXISTS ""TmAttributeSynonyms"" (
     ""Id""              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    ""AttributeId""      UUID NOT NULL,
     ""AttributeName""      VARCHAR(250) NOT NULL,
     ""Synonym""      VARCHAR(250) NOT NULL,
-    ""Language""      VARCHAR(5) NOT NULL,
-    ""InsertedBy"" integer NOT NULL DEFAULT 0,
-    ""InsertedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""UpdatedBy"" integer NULL,
-    ""UpdatedAt"" timestamp without time zone NOT NULL DEFAULT NOW(),
-    ""IsActive"" boolean NOT NULL DEFAULT TRUE,
-    CONSTRAINT FK_TmDocumentTypeAttributes_Attribute_id FOREIGN key(""AttributeId"") REFERENCES ""TmDocumentTypeAttributes""(""Id"")
+    ""Language""      VARCHAR(5) NOT NULL
 );
 
-CREATE INDEX ""IX_TmAttributeSynonyms_AttributeId"" ON public.""TmAttributeSynonyms"" USING btree (""AttributeId"");
 CREATE INDEX ""IX_TmAttributeSynonyms_AttributeName"" ON public.""TmAttributeSynonyms"" USING btree (""AttributeName"");
 CREATE INDEX ""IX_TmAttributeSynonyms_Synonym"" ON public.""TmAttributeSynonyms"" USING btree (""Synonym"");
 CREATE INDEX ""IX_TmAttributeSynonyms_Language"" ON public.""TmAttributeSynonyms"" USING btree (""Language"");

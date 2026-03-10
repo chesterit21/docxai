@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Api.DataAccess;
 using Api.DataAccess.Models.Dms;
+using Api.DataAccess.Models.Masters;
 using Api.Repository.Dms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,17 +64,20 @@ public class DocumentClassificationWorkflow
         _logger.LogInformation("[Workflow] 📏 File size: {Size}MB, Provider: {Provider}",
             fileSize / (1024 * 1024), providerName);
 
+        // Ambil taksonomi dinamis
+        var documentTypes = await GetDocumentTypesAsync(ct);
+
         // Tentukan strategi
         string rawResponse;
         var needsChunking = NeedsChunking(fileSize, providerName);
 
         if (needsChunking)
         {
-            rawResponse = await ExecuteChunkedUploadAsync(task, providerSlot, fileSize, sessionId, ct);
+            rawResponse = await ExecuteChunkedUploadAsync(task, providerSlot, fileSize, sessionId, documentTypes, ct);
         }
         else
         {
-            rawResponse = await ExecuteDirectUploadAsync(task, providerSlot, sessionId, ct);
+            rawResponse = await ExecuteDirectUploadAsync(task, providerSlot, sessionId, documentTypes, ct);
         }
 
         // Parse JSON response
@@ -99,11 +103,12 @@ public class DocumentClassificationWorkflow
         AgentPollingTaskDocument task,
         ProviderSlot providerSlot,
         string sessionId,
+        List<TmDocumentType> documentTypes,
         CancellationToken ct)
     {
         _logger.LogInformation("[Workflow] 📤 Direct upload: {Path}", task.FullPath);
 
-        var systemPrompt = ClassificationPrompt.Build("");
+        var systemPrompt = ClassificationPrompt.Build("", documentTypes);
         var userMessage = ClassificationPrompt.UserMessage;
 
         return await _orchestrator.AskAsync(
@@ -125,6 +130,7 @@ public class DocumentClassificationWorkflow
         ProviderSlot providerSlot,
         long fileSize,
         string sessionId,
+        List<TmDocumentType> documentTypes,
         CancellationToken ct)
     {
         var chunkSize = FileSplitter.GetChunkSizeForProvider(providerSlot.Provider.WebAiName);
@@ -156,7 +162,7 @@ public class DocumentClassificationWorkflow
                 {
                     // Chunk terakhir: prompt klasifikasi asli
                     prompt = ChunkedUploadPrompt.BuildFinalPrompt(partNumber, totalParts)
-                           + ClassificationPrompt.Build("");
+                           + ClassificationPrompt.Build("", documentTypes);
                     userMsg = ChunkedUploadPrompt.ChunkUserMessage(partNumber, totalParts);
                 }
                 else if (partNumber == 1)
@@ -260,6 +266,13 @@ public class DocumentClassificationWorkflow
     // ────────────────────────────────────────────────────────
     //  HELPERS
     // ────────────────────────────────────────────────────────
+
+    private async Task<List<TmDocumentType>> GetDocumentTypesAsync(CancellationToken ct)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        return await dbContext.Set<TmDocumentType>().ToListAsync(ct);
+    }
 
     private static string BuildSummaryContent(string? summary, string? points)
     {

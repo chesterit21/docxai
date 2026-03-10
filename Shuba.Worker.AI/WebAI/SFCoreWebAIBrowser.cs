@@ -255,11 +255,14 @@ public static class SFCoreWebAIBrowser
             {
                 // Qwen: klik "+" → menu → klik "Upload attachment" → FileChooser
                 await UploadQwen(page, selectors, finalFilePath);
+                await Task.Delay(30_000);
             }
             else
             {
                 // DeepSeek & ZAI: klik button upload → langsung FileChooser
                 await UploadDirectButton(page, selectors, finalFilePath, providerName);
+                if (providerName.Contains("DeepSeek", StringComparison.OrdinalIgnoreCase)) await Task.Delay(50_000);
+                else await Task.Delay(30_000);
             }
 
             Console.WriteLine($"[Upload-{providerName}] ✅ File uploaded: {Path.GetFileName(finalFilePath)}");
