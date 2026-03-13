@@ -503,6 +503,10 @@ public static class SFCoreWebAIBrowser
                 .Where(s => s.SelectorType == "Send")
                 .OrderBy(s => s.SelectorIndex)
                 .ToList();
+            var stopSelectors = selectors
+                .Where(s => s.SelectorType == "Stop-Button")
+                .OrderBy(s => s.SelectorIndex)
+                .ToList();
             var inputSelectors = selectors
                 .Where(s => s.SelectorType == "Input-Chat")
                 .OrderBy(s => s.SelectorIndex)
@@ -520,63 +524,97 @@ public static class SFCoreWebAIBrowser
 
                 try
                 {
-                    await FocusInput(page, inputSelectors);
-                    await TypeHumanLikeWithNewlines(page, "terus kalau semisal nya,");
-                    await Task.Delay(1_000);
-                    Console.WriteLine($"[WaitResponse - {webAiName}] Check Button.");
-
-                    foreach (var sel in sendSelectors)
+                    if (webAiName.ToLower().Contains("qwen", StringComparison.OrdinalIgnoreCase))
                     {
-                        try
+                        foreach (var sel in stopSelectors)
                         {
-                            var btn = PlaywrightLocatorResolver.Resolve(page, sel.LocatorStrategy, sel.SelectorElement);
-                            if (await btn.CountAsync() > 0)
+                            try
                             {
-                                isRunning = false;
-                                break;
-                            }
-                            Console.WriteLine($"[Button Send - {webAiName}] ✅ - AI Still Writing...");
-                            await NaturalDelay();
-                        }
-                        catch { continue; }
-                    }
+                                var btn = PlaywrightLocatorResolver.Resolve(page, sel.LocatorStrategy, sel.SelectorElement);
+                                if (await btn.CountAsync() == 0)
+                                {
 
-                    if (webAiName.ToLower().Contains("qwen"))
-                    {
-                        if (pollCount > 8) { isRunning = false; break; }
+                                    isRunning = false;
+                                    break;
+                                }
+                                await NaturalDelay();
+                            }
+                            catch { continue; }
+                        }
+                        foreach (var sel in sendSelectors)
+                        {
+                            try
+                            {
+                                var btn = PlaywrightLocatorResolver.Resolve(page, sel.LocatorStrategy, sel.SelectorElement);
+                                if (await btn.CountAsync() > 0)
+                                {
+                                    var classAttr = await btn.GetAttributeAsync("class");
+                                    var hasClassStopButton = classAttr?.Contains("stop-button") ?? true;
+                                    if (hasClassStopButton)
+                                    {
+                                        isRunning = false;
+                                        break;
+                                    }
+                                    await Task.Delay(1_000);
+                                    var isDisabled = await btn.IsDisabledAsync();
+                                    if (isDisabled)
+                                    {
+                                        isRunning = false;
+                                        break;
+                                    }
+
+                                    await Task.Delay(1_000);
+                                    classAttr = await btn.GetAttributeAsync("class");
+                                    var hasDisabledClass = classAttr?.Split(' ').Contains("disabled") ?? true;
+                                    if (hasDisabledClass)
+                                    {
+                                        isRunning = false;
+                                        break;
+                                    }
+                                }
+                                await NaturalDelay();
+                            }
+                            catch { continue; }
+                        }
+
                     }
                     else
                     {
-                        if (pollCount > 10) { isRunning = false; }
-                    }
 
-                    var random = new Random();
-                    for (int i = 0; i < "terus kalau semisal nya,".Length; i++)
-                    {
-                        await page.Keyboard.PressAsync("Backspace");
-                        await Task.Delay(random.Next(60, 150));
-                    }
+                        await FocusInput(page, inputSelectors);
+                        await TypeHumanLikeWithNewlines(page, "terus kalau semisal nya,");
+                        await Task.Delay(1_000);
+                        Console.WriteLine($"[WaitResponse - {webAiName}] Check Button.");
 
-                    if (pollCount > 10)
-                    {
-                        await Task.Delay(1500);
-                        var bodyText = await page.InnerTextAsync("body");
-                        var extracted = ExtractJsonBySessionId(bodyText, sessionId);
-                        if (!string.IsNullOrEmpty(extracted))
+                        foreach (var sel in sendSelectors)
                         {
-                            Console.WriteLine($"[WaitResponse] ✅ Response extracted ({extracted.Length} chars).");
-                            return extracted;
+                            try
+                            {
+                                var btn = PlaywrightLocatorResolver.Resolve(page, sel.LocatorStrategy, sel.SelectorElement);
+                                if (await btn.CountAsync() > 0)
+                                {
+                                    isRunning = false;
+                                    break;
+                                }
+                                Console.WriteLine($"[Button Send - {webAiName}] ✅ - AI Still Writing...");
+                                await Task.Delay(1_000);
+                            }
+                            catch { continue; }
                         }
-                        Console.WriteLine("[WaitResponse] ⚠️ No JSON found, returning raw body text.");
-                        return bodyText;
+
+                        var random = new Random();
+                        for (int i = 0; i < "terus kalau semisal nya,".Length; i++)
+                        {
+                            await page.Keyboard.PressAsync("Backspace");
+                            await Task.Delay(random.Next(60, 150));
+                        }
                     }
                 }
                 catch (Exception pollEx)
                 {
                     Console.WriteLine($"[WaitResponse] ⚠️ Poll error: {pollEx.Message}");
                 }
-
-                await Task.Delay(pollIntervalMs);
+                await NaturalDelay();
             }
 
             Console.WriteLine("[WaitResponse] ⏰ Timeout! Extracting available content...");

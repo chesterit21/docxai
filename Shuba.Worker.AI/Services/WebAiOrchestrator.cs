@@ -131,7 +131,7 @@ public class WebAiOrchestrator : IAsyncDisposable
                 {
                     Console.WriteLine($"[{provider.WebAiName}] 📎 Uploading file: {Path.GetFileName(filePath)}");
                     await SFCoreWebAIBrowser.UploadFile(page, selectors, filePath, provider.WebAiName);
-                    await Task.Delay(2000); // jeda antar file
+                    await Task.Delay(5000); // jeda antar file
                 }
             }
 
@@ -141,7 +141,7 @@ public class WebAiOrchestrator : IAsyncDisposable
 
             if (!string.IsNullOrWhiteSpace(response))
             {
-                if (response.Length > 300)
+                if (response.Length > 3000)
                 {
                     Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
                     return response;
@@ -150,7 +150,7 @@ public class WebAiOrchestrator : IAsyncDisposable
                 {
                     await Task.Delay(10_000);
                     response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId);
-                    if (response.Length > 300)
+                    if (response.Length > 3000)
                     {
                         Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
                         return response;

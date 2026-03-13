@@ -10,15 +10,16 @@ public class Worker(
     ILogger<Worker> logger,
     IServiceScopeFactory scopeFactory,
     ProviderManager providerManager,
-    WebAiOrchestrator orchestrator) : BackgroundService
+    WebAiOrchestrator orchestrator,
+    IConfiguration configuration) : BackgroundService
 {
-    private const int POLLING_INTERVAL_MS = 3000; // 3 detik
+    private int PollingIntervalMs => configuration.GetValue<int?>("pollingDoc") ?? 3000;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("╔══════════════════════════════════════════════╗");
         logger.LogInformation("║  Shuba.Worker.AI — Document Extractor       ║");
-        logger.LogInformation("║  Max Concurrent: 3  |  Poll: {Poll}ms        ║", POLLING_INTERVAL_MS);
+        logger.LogInformation("║  Max Concurrent: 3  |  Poll: {Poll}ms        ║", PollingIntervalMs);
         logger.LogInformation("╚══════════════════════════════════════════════╝");
 
         // Connect CDP saat startup
@@ -46,7 +47,7 @@ public class Worker(
                 logger.LogError(ex, "[Worker] ✗ Unhandled error in poll cycle.");
             }
 
-            await Task.Delay(POLLING_INTERVAL_MS, stoppingToken);
+            await Task.Delay(PollingIntervalMs, stoppingToken);
         }
 
         logger.LogInformation("[Worker] 🛑 Shutting down...");
