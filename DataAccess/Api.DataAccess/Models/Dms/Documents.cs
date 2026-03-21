@@ -19,7 +19,7 @@ namespace Api.DataAccess.Models.Dms
         [Column(TypeName = "varchar(250)")]
         public string DocumentTitle { get; set; }
 
-        [Column(TypeName = "varchar(1000)")]
+        [Column(TypeName = "text")]
         public string DocumentDesc { get; set; }
 
         [Column(TypeName = "integer")]

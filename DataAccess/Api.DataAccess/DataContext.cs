@@ -1,4 +1,4 @@
-﻿
+
 using Api.DataAccess.Models.Dms;
 using Api.DataAccess.Models.Masters;
 using Api.DataAccess.Models.Systems;
@@ -79,6 +79,8 @@ namespace Api.DataAccess
         public DbSet<DocumentRelated> RelatedDocuments { get; set; }
         public DbSet<MigrationJob> MigrationJobs { get; set; }
         public DbSet<LoginActivityLog> LoginActivityLogs { get; set; }
+        public DbSet<AiModel> AiModels { get; set; }
+
 
         public DbSet<AgentPollingTaskDocument> AgentPollingTaskDocuments { get; set; }
         public DbSet<DocumentExtractedEntities> DocumentExtractedEntities { get; set; }
@@ -162,6 +164,8 @@ namespace Api.DataAccess
             modelBuilder.Entity<DocumentFavorite>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<DocumentLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
             modelBuilder.Entity<LoginActivityLog>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+            modelBuilder.Entity<AiModel>().Property(u => u.Id).HasDefaultValueSql("uuid_generate_v4()");
+
 
             //modelBuilder.Entity<DocumentFiles>().Property(e => e.SearchVector).HasColumnType("tsvector")
             //.HasComputedColumnSql("to_tsvector('english', coalesce(\"DocumentFileContent\",''))", stored: true);

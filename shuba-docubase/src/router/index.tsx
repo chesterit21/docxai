@@ -44,6 +44,7 @@ import EmailLog from "../pages/EmailLog";
 import Watermark from "../pages/Watermark";
 import Reminders from "../pages/Reminders";
 import ChatAI from "../pages/ChatAI";
+import AiModel from "../pages/AiModel";
 
 export const router = createBrowserRouter([
   {
@@ -102,6 +103,7 @@ export const router = createBrowserRouter([
       { path: "search", element: <Search /> },
       { path: "settings", element: <Settings /> },
       { path: "watermark", element: <Watermark /> },
+      { path: "ai-model", element: <AiModel /> },
       { path: "application-log", element: <ApplicationLog /> },
       { path: "transaction-log", element: <TransactionLog /> },
       { path: "email-log", element: <EmailLog /> },

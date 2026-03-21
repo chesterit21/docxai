@@ -96,6 +96,22 @@ public class WebAiOrchestrator : IAsyncDisposable
     //  MAIN: ASK
     // ────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Calculates dynamic delay (ms) based on file size.
+    /// ≤5MB → 4s, ≤20MB → 8s, ≤50MB → 20s, >50MB → 40s
+    /// </summary>
+    public static int CalculateUploadDelay(long fileSizeBytes)
+    {
+        var sizeMb = fileSizeBytes / (1024.0 * 1024.0);
+        return sizeMb switch
+        {
+            <= 5 => 4_000,
+            <= 20 => 8_000,
+            <= 50 => 20_000,
+            _ => 40_000
+        };
+    }
+
     public async Task<string> AskAsync(
         WebAiProvider provider,
         IList<WebAiSelector> selectors,
@@ -103,6 +119,8 @@ public class WebAiOrchestrator : IAsyncDisposable
         string userMessage,
         string sessionId,
         List<string>? filePaths = null,
+        long fileSizeBytes = 0,
+        bool isDataArray = false,
         CancellationToken ct = default)
     {
         var page = await GetOrCreatePageAsync(provider);
@@ -130,27 +148,26 @@ public class WebAiOrchestrator : IAsyncDisposable
                 foreach (var filePath in filePaths)
                 {
                     Console.WriteLine($"[{provider.WebAiName}] 📎 Uploading file: {Path.GetFileName(filePath)}");
-                    await SFCoreWebAIBrowser.UploadFile(page, selectors, filePath, provider.WebAiName);
-                    await Task.Delay(5000); // jeda antar file
+                    await SFCoreWebAIBrowser.UploadFile(page, selectors, filePath, provider.WebAiName, fileSizeBytes);
                 }
             }
 
             await SFCoreWebAIBrowser.SendMessage(page, selectors, systemPrompt, userMessage);
             await SFCoreWebAIBrowser.ScrollElementToBottom(page);
-            var response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId);
+            var response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId, isDataArray: isDataArray);
 
             if (!string.IsNullOrWhiteSpace(response))
             {
-                if (response.Length > 3000)
+                if (response.Length > 1000)
                 {
                     Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
                     return response;
                 }
                 else
                 {
-                    await Task.Delay(10_000);
-                    response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId);
-                    if (response.Length > 3000)
+                    await Task.Delay(5_000);
+                    response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId, isDataArray: isDataArray);
+                    if (response.Length > 1000)
                     {
                         Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
                         return response;
@@ -168,6 +185,65 @@ public class WebAiOrchestrator : IAsyncDisposable
         throw new Exception($"[{provider.WebAiName}] Failed for session: {sessionId}");
     }
 
+    public async Task<string> GetResponseOnlyAsync(
+        WebAiProvider provider,
+        IList<WebAiSelector> selectors,
+        string systemPrompt,
+        string userMessage,
+        string sessionId,
+        List<string>? filePaths = null,
+        long fileSizeBytes = 0,
+        bool isDataArray = false,
+        CancellationToken ct = default)
+    {
+        var page = await GetOrCreatePageAsync(provider);
+
+        _requestCounters.TryGetValue(provider.WebAiName, out int count);
+        count++;
+        _requestCounters[provider.WebAiName] = count;
+
+        if (count > 1 && count % _settings.SessionResetAfterNRequests == 1)
+        {
+            Console.WriteLine($"[Session] 🔄 {provider.WebAiName} reached {_settings.SessionResetAfterNRequests} requests → NewSession");
+            await SFCoreWebAIBrowser.NewSession(page, provider);
+        }
+
+        try
+        {
+            ct.ThrowIfCancellationRequested();
+
+            await SFCoreWebAIBrowser.WaitForPageReady(page, selectors);
+            await SFCoreWebAIBrowser.CheckClearChat(page, selectors, "Clear-Chat");
+            var response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId, isDataArray: isDataArray);
+
+            if (!string.IsNullOrWhiteSpace(response))
+            {
+                if (response.Length > 1000)
+                {
+                    Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
+                    return response;
+                }
+                else
+                {
+                    await Task.Delay(5_000);
+                    response = await SFCoreWebAIBrowser.WaitAndExtractResponse(page, provider.WebAiName, selectors, sessionId, isDataArray: isDataArray);
+                    if (response.Length > 1000)
+                    {
+                        Console.WriteLine($"[{provider.WebAiName}] ✅ Got response ({response.Length} chars).");
+                        return response;
+                    }
+                }
+            }
+
+            Console.WriteLine($"[{provider.WebAiName}] ⚠️ Empty response.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[{provider.WebAiName}] ✗  failed: {ex.Message}");
+        }
+
+        throw new Exception($"[{provider.WebAiName}] Failed for session: {sessionId}");
+    }
     // ────────────────────────────────────────────────────────
     //  DISPOSE
     // ────────────────────────────────────────────────────────

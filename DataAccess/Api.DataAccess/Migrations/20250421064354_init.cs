@@ -76,8 +76,8 @@ namespace Api.DataAccess.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CategoryID = table.Column<int>(type: "integer", nullable: false),
-                    DocumentTitle = table.Column<string>(type: "varchar(100)", nullable: false),
-                    DocumentDesc = table.Column<string>(type: "varchar(255)", nullable: true),
+                    DocumentTitle = table.Column<string>(type: "varchar(250)", nullable: false),
+                    DocumentDesc = table.Column<string>(type: "text", nullable: true),
                     Owner = table.Column<int>(type: "integer", nullable: false),
                     FileSize = table.Column<int>(type: "integer", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

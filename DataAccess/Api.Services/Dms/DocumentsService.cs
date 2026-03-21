@@ -1,4 +1,4 @@
-﻿using Api.DataAccess.Models.Dms;
+using Api.DataAccess.Models.Dms;
 using Api.DataAccess.Models.Masters;
 using Api.DataAccess.Models.Systems;
 using Api.Domain;
@@ -1607,5 +1607,12 @@ namespace Api.Services.Dms
             }
         }
         #endregion
+
+        public async Task<ResponseDocumentDetailsAi> GetDocumentDetailsAi(int id)
+        {
+            await ValidateInputAsync(id);
+            await repository.LogTransaction($"Get Document Details for AI - Id {id}", Domain.Attributes.UserAction.Read);
+            return await repository.GetDocumentDetailsAiAsync(id);
+        }
     }
 }

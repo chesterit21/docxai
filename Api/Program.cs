@@ -31,12 +31,13 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;//ILogger
+using Api.Services.Core.Caching;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 var configuration = builder.Configuration;
 
-//var encword = "P@ssw0rd#2026".Encrypt();
+//var encword = "Password_Gua123!".Encrypt();
 //var makelicense = new RequestLicenseInfo
 //{
 //	UserCount = 3,
@@ -58,32 +59,32 @@ jsonFileName = string.IsNullOrEmpty(jsonFileName) ? Path.Combine(path, "spellche
 // Initialize spell checker dictionaries if file exists
 if (File.Exists(jsonFileName))
 {
-	string jsonImport = File.ReadAllText(jsonFileName);
-	var spellChecks = JsonConvert.DeserializeObject<List<DictionaryData>>(jsonImport);
-	var spellDictCollection = new List<DictionaryData>();
-	string personalDictPath = null;
-	if (spellChecks != null)
-	{
-		foreach (var spellCheck in spellChecks)
-		{
-			spellDictCollection.Add(new DictionaryData(
-				spellCheck.LanguadeID,
-				Path.Combine(path, spellCheck.DictionaryPath),
-				Path.Combine(path, spellCheck.AffixPath)
-			));
-			personalDictPath = Path.Combine(path, spellCheck.PersonalDictPath);
-		}
-	}
-	SpellChecker.InitializeDictionaries(spellDictCollection, personalDictPath, 3);
+    string jsonImport = File.ReadAllText(jsonFileName);
+    var spellChecks = JsonConvert.DeserializeObject<List<DictionaryData>>(jsonImport);
+    var spellDictCollection = new List<DictionaryData>();
+    string personalDictPath = null;
+    if (spellChecks != null)
+    {
+        foreach (var spellCheck in spellChecks)
+        {
+            spellDictCollection.Add(new DictionaryData(
+                spellCheck.LanguadeID,
+                Path.Combine(path, spellCheck.DictionaryPath),
+                Path.Combine(path, spellCheck.AffixPath)
+            ));
+            personalDictPath = Path.Combine(path, spellCheck.PersonalDictPath);
+        }
+    }
+    SpellChecker.InitializeDictionaries(spellDictCollection, personalDictPath, 3);
 }
 
 // Register LoginSettings
 builder.Services.Configure<AppSettings.LoginData>(
-	builder.Configuration.GetSection("Login"));
+    builder.Configuration.GetSection("Login"));
 
 // Register ConnectionStringSettings
 builder.Services.Configure<AppSettings.ConnectionStringProperty>(
-	builder.Configuration.GetSection("ConnectionString"));
+    builder.Configuration.GetSection("ConnectionString"));
 
 //services.AddDistributedMemoryCache();
 services.AddRouting(options => options.LowercaseUrls = true);
@@ -92,58 +93,58 @@ services.AddHttpContextAccessor();
 services.AddEndpointsApiExplorer();
 services.AddMvc(options =>
 {
-	options.Filters.Add<ExceptionFilter>();
-	//options.Filters.Add<AccessFilter>();
-	options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
-	options.InputFormatters.Insert(0, new HttpRawJsonBodyInputFormatter());
+    options.Filters.Add<ExceptionFilter>();
+    //options.Filters.Add<AccessFilter>();
+    options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
+    options.InputFormatters.Insert(0, new HttpRawJsonBodyInputFormatter());
 });
 services.AddLicenseManagement();
 
 services.AddControllers(options =>
 {
-	options.Conventions.Add(new ControllerDocumentationConvention());
+    options.Conventions.Add(new ControllerDocumentationConvention());
 })
-	.AddJsonOptions(options =>
-	{
-		//DONT SHOW NULL RESPONSE
-		//options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-		options.JsonSerializerOptions.Converters.Add(new DateFormatConverter());
-		options.JsonSerializerOptions.Converters.Add(new DateFormatConverterNullable());
-		options.JsonSerializerOptions.Converters.Add(new JsonDoubleConverter());
-		options.JsonSerializerOptions.AllowTrailingCommas = true;
-		options.JsonSerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
-		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-		options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-	}
-	);
+    .AddJsonOptions(options =>
+    {
+        //DONT SHOW NULL RESPONSE
+        //options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.Converters.Add(new DateFormatConverter());
+        options.JsonSerializerOptions.Converters.Add(new DateFormatConverterNullable());
+        options.JsonSerializerOptions.Converters.Add(new JsonDoubleConverter());
+        options.JsonSerializerOptions.AllowTrailingCommas = true;
+        options.JsonSerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    }
+    );
 
 services
-	.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-	.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-	{
-		var key = configuration["Authentication:SymmetricSecurityKey"];
-		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			ClockSkew = TimeSpan.Zero,
-			ValidateIssuer = true,
-			ValidateAudience = true,
-			ValidateLifetime = true,
-			ValidateIssuerSigningKey = true,
-			ValidIssuer = "shuba.co.id",
-			ValidAudience = "shuba.co.id",
-			IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-		};
-	});
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        var key = configuration["Authentication:SymmetricSecurityKey"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.Zero,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "shuba.co.id",
+            ValidAudience = "shuba.co.id",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+        };
+    });
 services.AddCors(options =>
 {
-	//string feOrigin = configuration["ApplicationUrl"].ToString();
-	options.AddPolicy("cors", policy =>
-	{
-		policy.AllowAnyMethod()
-			   .AllowAnyHeader()
-			   .AllowCredentials()
-			   .SetIsOriginAllowed(hostName => true); //.AllowAnyOrigin()
-	});
+    //string feOrigin = configuration["ApplicationUrl"].ToString();
+    options.AddPolicy("cors", policy =>
+    {
+        policy.AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials()
+               .SetIsOriginAllowed(hostName => true); //.AllowAnyOrigin()
+    });
 });
 
 
@@ -155,61 +156,62 @@ services.AddResponseCompression();
 
 services.AddSwaggerGen(c =>
 {
-	c.TagActionsBy(api =>
-	{
-		if (api.ActionDescriptor is ControllerActionDescriptor actionDescriptor)
-		{
-			//var group = actionDescriptor.ControllerTypeInfo.GetCustomAttributes(typeof(GroupTagAttribute), true)
-			//    .Cast<GroupTagAttribute>().FirstOrDefault();
+    c.TagActionsBy(api =>
+    {
+        if (api.ActionDescriptor is ControllerActionDescriptor actionDescriptor)
+        {
+            //var group = actionDescriptor.ControllerTypeInfo.GetCustomAttributes(typeof(GroupTagAttribute), true)
+            //    .Cast<GroupTagAttribute>().FirstOrDefault();
 
-			//return group != null
-			//    ? [group.Name]
-			//    : [actionDescriptor.ControllerName];
+            //return group != null
+            //    ? [group.Name]
+            //    : [actionDescriptor.ControllerName];
 
-			var group = actionDescriptor.ControllerTypeInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true)
-			.Cast<DisplayNameAttribute>().FirstOrDefault();
+            var group = actionDescriptor.ControllerTypeInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true)
+            .Cast<DisplayNameAttribute>().FirstOrDefault();
 
-			return group != null
-				? [group.DisplayName]
-				: [actionDescriptor.ControllerName];
-		}
-
-		throw new NullReferenceException("Couldn't find the group name");
-	});
-
-	c.EnableAnnotations();
-	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DMS", Version = "v1" });
-	c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
-	// Configure bearer token in swagger
-	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-	{
-		In = ParameterLocation.Header,
-		Description = "Please insert a valid token",
-		Name = "Authorization",
-		Type = SecuritySchemeType.ApiKey
-	});
-
-	c.AddSecurityRequirement(new OpenApiSecurityRequirement
-	{
-		{
-			new OpenApiSecurityScheme
-			{
-				Reference = new OpenApiReference
-				{
-					Type = ReferenceType.SecurityScheme,
-					Id = "Bearer"
-				}
-			},
-			Array.Empty<string>()//new string[] { }
+            return group != null
+                ? [group.DisplayName]
+                : [actionDescriptor.ControllerName];
         }
-	});
 
-	var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-	if (File.Exists(xmlPath))
-		c.IncludeXmlComments(xmlPath);
+        throw new NullReferenceException("Couldn't find the group name");
+    });
+
+    c.EnableAnnotations();
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DMS", Version = "v1" });
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+    // Configure bearer token in swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please insert a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()//new string[] { }
+        }
+    });
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        c.IncludeXmlComments(xmlPath);
 });
 
+services.AddSFCoreCaching();
 services.RegisterApplicationDependencies(builder.Configuration);
 
 
@@ -227,15 +229,15 @@ string licenseKey = "Ngo9BigBOggjHTQxAR8/V1JGaF5cXGpCf0x0RHxbf1x2ZFRMY1tbRn5PMyB
 SyncfusionLicenseProvider.RegisterLicense(licenseKey);
 if (app.Environment.IsDevelopment())
 {
-	app.UseSwagger();
-	app.UseSwaggerUI(options =>
-	{
-		options.DisplayRequestDuration();
-		options.SwaggerEndpoint("/swagger/v1/swagger.json", "Docubase API by Shuba Solution v1");
-		options.RoutePrefix = "swagger";
-		options.DocumentTitle = "Docubase API by Shuba Solution";
-		options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-	});
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.DisplayRequestDuration();
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Docubase API by Shuba Solution v1");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "Docubase API by Shuba Solution";
+        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+    });
 }
 
 
@@ -249,15 +251,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.Use(next => context =>
 {
-	context.Request.EnableBuffering();
-	return next(context);
+    context.Request.EnableBuffering();
+    return next(context);
 });
 app.UseMiddleware<UnauthorizedMessageMiddleware>();
 app.MapControllers();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
 app.UseTokenBlacklist();//extension method utk blacklist token ketika logout
@@ -289,30 +291,30 @@ var setting = AppSettings.Read();
 string uploadPath = setting.ApplicationInfoData.AppUploadFolder;
 if (!Directory.Exists(uploadPath))
 {
-	//builder.Environment.ContentRootPath;
-	//EQUALS TO
-	//Path.GetDirectoryName(Assembly.GetEntryAssembly().Location.Substring(0, Assembly.GetEntryAssembly().Location.IndexOf("bin\\")));
+    //builder.Environment.ContentRootPath;
+    //EQUALS TO
+    //Path.GetDirectoryName(Assembly.GetEntryAssembly().Location.Substring(0, Assembly.GetEntryAssembly().Location.IndexOf("bin\\")));
 
-	Directory.CreateDirectory(uploadPath);
+    Directory.CreateDirectory(uploadPath);
 }
 
 app.UseStaticFiles(new StaticFileOptions
 {
-	FileProvider = new PhysicalFileProvider(uploadPath),
-	RequestPath = "/resource"
+    FileProvider = new PhysicalFileProvider(uploadPath),
+    RequestPath = "/resource"
 });
 
 string userPpFolder = "user_pp";
 string userPpPath = Path.Combine(AppContext.BaseDirectory, userPpFolder);
 if (!Directory.Exists(userPpPath))
 {
-	Directory.CreateDirectory(userPpPath);
+    Directory.CreateDirectory(userPpPath);
 }
 
 app.UseStaticFiles(new StaticFileOptions
 {
-	FileProvider = new PhysicalFileProvider(userPpPath),
-	RequestPath = "/profilep"
+    FileProvider = new PhysicalFileProvider(userPpPath),
+    RequestPath = "/profilep"
 });
 
 //var externalFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "C:\\MySite\\ExternalFolder");

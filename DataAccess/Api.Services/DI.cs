@@ -1,8 +1,11 @@
-﻿using Api.Repository;
+using Api.Repository;
 using Api.Repository.Masters;
 using Api.Services.Dms;
 using Api.Services.Masters;
 using Api.Services.Systems;
+using Api.Services.Core.Inference;
+using Api.Services.Core.Models;
+using Api.Services.Core.Providers.Factories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -52,6 +55,8 @@ namespace Api.Services
             services.AddScoped<LogApplicationService>();
             services.AddScoped<LogTransactionService>();
             services.AddScoped<LogAuditTrailService>();
+            services.AddScoped<AiModelService>();
+
 
             #region DMS
             services.AddScoped<AttributesService>();
@@ -81,6 +86,12 @@ namespace Api.Services
             services.AddScoped<DocumentEditorService>();
             services.AddScoped<Ej2SpreedsheetService>();
             services.AddScoped<DashboardService>();
+            #endregion
+
+            #region AI INFERENCE
+            services.AddSingleton<IModelRegistry, DbModelRegistry>();
+            services.AddSingleton<ProviderFactory>();
+            services.AddScoped<InferenceEngine>();
             #endregion
 
             //services.AddSingleton<DynamicDbProvider>();

@@ -1,119 +1,95 @@
-Element button Upload Z_AI:
 
-<button id="upload-file-button" class="rounded-lg bg-transparent transition p-1 outline-hidden focus:outline-hidden hover:bg-gray-100 text-gray-800 dark:text-white dark:hover:bg-gray-800" type="button" aria-label="More"><svg class="size-5" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.0001 4.16675V15.8334M4.16675 10.0001H15.8334" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+private static string? ExtractJsonBySessionId(string bodyText, string? sessionId)
+{
+    if (string.IsNullOrWhiteSpace(bodyText)) return null;
 
-Veris terbau rnya, dia hampir sam aseperti Deepseek, gak ada klik menu dulu kayak Qwen....
-Jadi ketika di klik button tersebut, langsung terbuka Explorer untuk pilih file...
+    var candidates = new List<string>();
 
-dan ini Method sebelum nya :
-
-    public static async Task UploadFileViaDialog(IPage page, string filePath)
+    int searchFrom = 0;
+    while (true)
     {
-        string finalFilePath = filePath;
-        bool isRenamed = false;
-        string buttonUploadSelector = await EventPageHandler.FindSelectorByOtherNode(page, KeySelector, ButtonOpenFileUpload);
+        int sidIdx = bodyText.IndexOf("\"session_id\"", searchFrom, StringComparison.Ordinal);
+        if (sidIdx < 0) break;
 
-        try
+        // Walk BACKWARD dari sidIdx → cari root '{' pembuka
+        int rootOpen = -1;
+        int depth = 0;
+        for (int i = sidIdx; i >= 0; i--)
         {
-            if (!File.Exists(filePath))
-                throw new FileNotFoundException($"File not found: {filePath}");
-
-            if (FileTypeHelper.NeedsRename(filePath))
+            if (bodyText[i] == '}') depth++;
+            else if (bodyText[i] == '{')
             {
-                Console.WriteLine($"[Upload] 🔄 Programming file detected, creating renamed copy...");
-                finalFilePath = FileTypeHelper.CreateRenamedCopy(filePath);
-                isRenamed = true;
-            }
-            else
-            {
-                Console.WriteLine($"[Upload] ✅ File type allowed, using original file");
-            }
-
-            
-            // Strategy 1: Direct File Input
-            var fileInput = page.Locator("input[type='file']");
-            if (await fileInput.CountAsync() > 0)
-            {
-                await fileInput.SetInputFilesAsync(finalFilePath);
-                await page.WaitForTimeoutAsync(1000);
-                return;
-            }
-
-            // Strategy 2: Text-Based Selector
-            var uploadTexts = new[] { "Add File", "Upload", "Select File", "Choose File" };
-            foreach (var text in uploadTexts)
-            {
-                var textButton = page.GetByText(text, new PageGetByTextOptions { Exact = false });
-                if (await textButton.CountAsync() > 0)
-                {
-                    await textButton.First.ClickAsync();
-                    var fileChooser = await page.RunAndWaitForFileChooserAsync(
-                        () => textButton.First.ClickAsync(),
-                        new PageRunAndWaitForFileChooserOptions { Timeout = 8000 });
-                    await fileChooser.SetFilesAsync(finalFilePath);
-                    return;
-                }
-            }
-
-            // Strategy 3: Original Selector
-            var buttonLocator = page.Locator(buttonUploadSelector);
-
-            await buttonLocator.WaitForAsync(new LocatorWaitForOptions
-            {
-                State = WaitForSelectorState.Attached,
-                Timeout = 15000
-            });
-
-            if (!await buttonLocator.IsVisibleAsync())
-            {
-                await buttonLocator.ScrollIntoViewIfNeededAsync();
-                await page.WaitForTimeoutAsync(2000);
-            }
-
-            for (int attempt = 1; attempt <= 2; attempt++)
-            {
-                try
-                {
-                    var fileChooser = await page.RunAndWaitForFileChooserAsync(
-                        () => buttonLocator.ClickAsync(new LocatorClickOptions
-                        {
-                            Force = attempt == 2,
-                            Timeout = 5000
-                        }),
-                        new PageRunAndWaitForFileChooserOptions { Timeout = 10000 });
-
-                    await fileChooser.SetFilesAsync(finalFilePath);
-                    return;
-                }
-                catch (TimeoutException)
-                {
-                    if (attempt == 1)
-                    {
-                        Console.WriteLine("[Upload] ⏳ First attempt timeout, retrying...");
-                        await page.WaitForTimeoutAsync(3000);
-                        continue;
-                    }
-                    throw;
-                }
+                if (depth == 0) { rootOpen = i; break; }
+                depth--;
             }
         }
-        catch (Exception ex)
+
+        if (rootOpen >= 0)
         {
-            Console.WriteLine($"[Upload] ❌ Upload failed: {ex.Message}");
-            throw;
+            var extracted = ExtractBalancedJson(bodyText, rootOpen);
+            if (extracted != null && !candidates.Contains(extracted))
+                candidates.Add(extracted);
         }
-        finally
+
+        searchFrom = sidIdx + 1;
+    }
+
+    if (candidates.Count == 0)
+    {
+        Console.WriteLine("[ExtractJson] ⚠️ No JSON with session_id found.");
+        return null;
+    }
+
+    Console.WriteLine($"[ExtractJson] Found {candidates.Count} JSON candidate(s).");
+
+    var realCandidates = candidates.Where(c => !IsTemplateResponse(c)).ToList();
+    var pool = realCandidates.Count > 0 ? realCandidates : candidates;
+
+    if (!string.IsNullOrEmpty(sessionId))
+    {
+        var match = pool.LastOrDefault(c => c.Contains(sessionId));
+        if (match != null)
         {
-            if (isRenamed && finalFilePath != filePath)
-            {
-                try
-                {
-                    FileTypeHelper.CleanupRenamedFile(finalFilePath);
-                }
-                catch (Exception cleanupEx)
-                {
-                    Console.WriteLine($"[Upload] ⚠️ Cleanup warning: {cleanupEx.Message}");
-                }
-            }
+            Console.WriteLine($"[ExtractJson] ✅ Matched session_id ({match.Length} chars).");
+            return match;
         }
     }
+
+    var last = pool.Last();
+    Console.WriteLine($"[ExtractJson] ℹ️ Using last candidate ({last.Length} chars).");
+    return last;
+}
+
+   /// <summary>
+    /// Returns true if JSON still contains "..." placeholder (template/prompt echo).
+    /// </summary>
+    private static bool IsTemplateResponse(string json)
+        => json.Contains("\"...\"") || json.Contains(": \"...\"");
+// ── TAMBAH method baru ini (helper untuk ExtractJsonBySessionId) ──
+
+private static string? ExtractBalancedJson(string text, int openPos)
+{
+    int depth = 0;
+    bool inString = false;
+    bool escape = false;
+
+    for (int i = openPos; i < text.Length; i++)
+    {
+        char c = text[i];
+
+        if (escape)              { escape = false; continue; }
+        if (c == '\\' && inString) { escape = true; continue; }
+        if (c == '"')            { inString = !inString; continue; }
+        if (inString)            continue;
+
+        if      (c == '{') depth++;
+        else if (c == '}')
+        {
+            depth--;
+            if (depth == 0)
+                return text[openPos..(i + 1)];
+        }
+    }
+
+    return null; // unbalanced
+}

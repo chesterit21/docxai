@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Api.DataAccess.Models.Dms
 {
     [Table("AgentPollingTaskDocument", Schema = "public")]
-    public class AgentPollingTaskDocument : BaseEntityDefault
+    public class AgentPollingTaskDocument : BaseEntityAgent
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();

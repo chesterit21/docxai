@@ -6,18 +6,6 @@ import { ConfigProvider } from "antd";
 import { router } from "./router";
 import "antd/dist/reset.css";
 import "./index.css";
-import "@syncfusion/ej2-base/styles/material.css";
-import "@syncfusion/ej2-buttons/styles/material.css";
-import "@syncfusion/ej2-dropdowns/styles/material.css";
-import "@syncfusion/ej2-inputs/styles/material.css";
-import "@syncfusion/ej2-navigations/styles/material.css";
-import "@syncfusion/ej2-popups/styles/material.css";
-import "@syncfusion/ej2-splitbuttons/styles/material.css";
-import "@syncfusion/ej2-pdfviewer/styles/material.css";
-import "@syncfusion/ej2-documenteditor/styles/material.css";
-import "@syncfusion/ej2-lists/styles/material.css";
-import "@syncfusion/ej2-grids/styles/material.css";
-import "@syncfusion/ej2-react-spreadsheet/styles/material.css";
 import { AuthProvider } from "./context/AuthContext";
 
 const validateMessages = {
@@ -32,6 +20,11 @@ const validateMessages = {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ConfigProvider
+      theme={{
+        token: {
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
+        },
+      }}
       form={{
         validateMessages,
       }}

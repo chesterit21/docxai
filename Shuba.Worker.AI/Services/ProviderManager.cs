@@ -22,8 +22,8 @@ public class ProviderManager
         {
             new()
             {
-                Provider = new WebAiProvider { WebAiName = settings.DeepSeek.Name, WebAiUrl = settings.DeepSeek.Url },
-                Selectors = settings.DeepSeek.Selectors
+                Provider = new WebAiProvider { WebAiName = settings.Qwen.Name, WebAiUrl = settings.Qwen.Url },
+                Selectors = settings.Qwen.Selectors
             },
             new()
             {
@@ -32,8 +32,8 @@ public class ProviderManager
             },
             new()
             {
-                Provider = new WebAiProvider { WebAiName = settings.ZAi.Name, WebAiUrl = settings.ZAi.Url },
-                Selectors = settings.ZAi.Selectors
+                Provider = new WebAiProvider { WebAiName = settings.Qwen.Name, WebAiUrl = settings.Qwen.Url },
+                Selectors = settings.Qwen.Selectors
             }
         };
 
@@ -77,7 +77,7 @@ public class ProviderManager
 
         lock (_lock)
         {
-            if (fileSizeBytes > SIZE_80MB)
+            if (fileSizeBytes > SIZE_20MB)
             {
                 // > 80MB: HANYA DeepSeek atau ZAI
                 foreach (var slot in _slots)
@@ -93,18 +93,8 @@ public class ProviderManager
                 return null;
             }
 
-            if (fileSizeBytes > SIZE_20MB)
+            if (fileSizeBytes < SIZE_20MB)
             {
-                // 20-80MB: prefer DeepSeek/ZAI, fallback Qwen
-                foreach (var slot in _slots)
-                {
-                    if (!_providerBusy[slot.Provider.WebAiName] && IsLargeFileProvider(slot.Provider.WebAiName))
-                    {
-                        _providerBusy[slot.Provider.WebAiName] = true;
-                        Console.WriteLine($"[ProviderManager] 🔒 Acquired (20-80MB, preferred): {slot.Provider.WebAiName}");
-                        return slot;
-                    }
-                }
                 // Fallback: Qwen (will be chunked to 19MB)
                 foreach (var slot in _slots)
                 {

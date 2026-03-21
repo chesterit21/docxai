@@ -13,6 +13,7 @@ import {
   UsergroupAddOutlined,
   UserOutlined,
   FileProtectOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { useState, useMemo } from "react";
 import { useAuth } from "../../../context/AuthContext";
@@ -168,6 +169,15 @@ export default function MenuItem({ collapsed }: { collapsed: boolean }) {
                       label: (
                         <Link to="/settings" style={{ fontSize: 15 }}>
                           Application Setting
+                        </Link>
+                      ),
+                    },
+                    {
+                      key: "ai-model",
+                      icon: <RobotOutlined style={{ fontSize: 20 }} />,
+                      label: (
+                        <Link to="/ai-model" style={{ fontSize: 15 }}>
+                          AI Model Configuration
                         </Link>
                       ),
                     },

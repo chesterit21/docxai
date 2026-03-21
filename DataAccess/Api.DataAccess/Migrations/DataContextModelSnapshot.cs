@@ -24,6 +24,45 @@ namespace Api.DataAccess.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "uuid-ossp");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.AgentPollingTaskDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullPath")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("TaskCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("AgentPollingTaskDocument", "public");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalActivities", b =>
                 {
                     b.Property<int>("Id")
@@ -528,6 +567,56 @@ namespace Api.DataAccess.Migrations
                     b.ToTable("TblDocumentAttributes");
                 });
 
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentExtractedEntities", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AttributeName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("ValueBoolean")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ValueDate")
+                        .HasColumnType("timestamp");
+
+                    b.Property<decimal?>("ValueDecimal")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("ValueNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ValueText")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("DocumentExtractedEntities", "public");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentFavorite", b =>
                 {
                     b.Property<Guid>("Id")
@@ -971,7 +1060,7 @@ namespace Api.DataAccess.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("DocumentDesc")
-                        .HasColumnType("varchar(1000)");
+                        .HasColumnType("text");
 
                     b.Property<string>("DocumentTitle")
                         .IsRequired()
@@ -1741,6 +1830,52 @@ namespace Api.DataAccess.Migrations
                     b.ToTable("TblMsUserRoles");
                 });
 
+            modelBuilder.Entity("Api.DataAccess.Models.Systems.AiModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuid_generate_v4()");
+
+                    b.Property<string>("ApiKey")
+                        .IsRequired()
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime>("InsertedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int>("InsertedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxToken")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UrlApi")
+                        .IsRequired()
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AiModel");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Systems.ApplicationLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2083,6 +2218,17 @@ namespace Api.DataAccess.Migrations
                     b.ToTable("TblLogTransaction");
                 });
 
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.AgentPollingTaskDocument", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
             modelBuilder.Entity("Api.DataAccess.Models.Dms.ApprovalActivities", b =>
                 {
                     b.HasOne("Api.DataAccess.Models.Dms.Approvals", "Approvals")
@@ -2221,6 +2367,17 @@ namespace Api.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentExtractedEntities", b =>
+                {
+                    b.HasOne("Api.DataAccess.Models.Dms.Documents", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
                 });
 
             modelBuilder.Entity("Api.DataAccess.Models.Dms.DocumentFiles", b =>

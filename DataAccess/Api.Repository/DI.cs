@@ -1,4 +1,4 @@
-﻿using Api.DataAccess;
+using Api.DataAccess;
 using Api.DataAccess.Models.Dms;
 using Api.Repository.Masters;
 using Api.Repository.Dms;
@@ -72,6 +72,8 @@ namespace Api.Repository
             services.AddScoped<IAttributeSynonymsRepository, AttributeSynonymsRepository>();
             services.AddScoped<IAgentPollingTaskDocumentRepository, AgentPollingTaskDocumentRepository>();
             services.AddScoped<IDocumentExtractedEntitiesRepository, DocumentExtractedEntitiesRepository>();
+            services.AddScoped<IAiModelRepository, AiModelRepository>();
+
         }
     }
 }

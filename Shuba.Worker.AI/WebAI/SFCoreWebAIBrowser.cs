@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using HumanCursor.Playwright;
+using Shuba.Worker.AI.Services;
 
 namespace Shuba.Worker.AI.WebAI;
 
@@ -230,7 +231,7 @@ public static class SFCoreWebAIBrowser
     /// - Qwen: HumanCursor klik "+" → menu muncul → HumanCursor klik "Upload attachment" → FileChooser
     /// - ZAI: HumanCursor klik button#upload-file-button → FileChooser langsung terbuka
     /// </summary>
-    public static async Task UploadFile(IPage page, IList<WebAiSelector> selectors, string filePath, string providerName)
+    public static async Task UploadFile(IPage page, IList<WebAiSelector> selectors, string filePath, string providerName, long fileSizeBytes = 0)
     {
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"File not found: {filePath}");
@@ -250,23 +251,24 @@ public static class SFCoreWebAIBrowser
 
         try
         {
+            var uploadDelay = WebAiOrchestrator.CalculateUploadDelay(fileSizeBytes);
+            Console.WriteLine($"[Upload-{providerName}] ⏳ Dynamic delay: {uploadDelay / 1000}s (file: {fileSizeBytes / (1024 * 1024)}MB)");
+
             // Route berdasarkan provider name
             if (providerName.Contains("Qwen", StringComparison.OrdinalIgnoreCase))
             {
                 // Qwen: klik "+" → menu → klik "Upload attachment" → FileChooser
                 await UploadQwen(page, selectors, finalFilePath);
-                await Task.Delay(30_000);
+                await Task.Delay(uploadDelay);
             }
             else
             {
                 // DeepSeek & ZAI: klik button upload → langsung FileChooser
                 await UploadDirectButton(page, selectors, finalFilePath, providerName);
-                if (providerName.Contains("DeepSeek", StringComparison.OrdinalIgnoreCase)) await Task.Delay(50_000);
-                else await Task.Delay(30_000);
+                await Task.Delay(uploadDelay);
             }
 
             Console.WriteLine($"[Upload-{providerName}] ✅ File uploaded: {Path.GetFileName(finalFilePath)}");
-            await NaturalDelay();
         }
         finally
         {
@@ -275,6 +277,7 @@ public static class SFCoreWebAIBrowser
                 FileTypeHelper.CleanupRenamedFile(finalFilePath);
             }
         }
+        await NaturalDelay();
     }
 
     /// <summary>
@@ -337,10 +340,12 @@ public static class SFCoreWebAIBrowser
             .Where(s => s.SelectorType == "Button-Plus")
             .OrderBy(s => s.SelectorIndex)
             .ToList();
-
+        Console.WriteLine($"[Upload-Qwen] 📤 HumanCursor → klik '+' → menu → 'Upload attachment'... {plusButtons.Count}");
         bool menuOpened = false;
         foreach (var btn in plusButtons)
         {
+            Console.WriteLine($"[Upload-Qwen] 📤 HumanCursor → klik '+'... {btn.SelectorElement}");
+            await Task.Delay(1_000);
             try
             {
                 var locator = PlaywrightLocatorResolver.Resolve(page, btn.LocatorStrategy, btn.SelectorElement);
@@ -494,6 +499,7 @@ public static class SFCoreWebAIBrowser
         string webAiName,
         IList<WebAiSelector> selectors,
         string? sessionId = null,
+        bool isDataArray = false,
         int timeoutMs = 180_000,
         int pollIntervalMs = 2_000)
     {
@@ -617,9 +623,8 @@ public static class SFCoreWebAIBrowser
                 await NaturalDelay();
             }
 
-            Console.WriteLine("[WaitResponse] ⏰ Timeout! Extracting available content...");
             var fallbackBody = await page.InnerTextAsync("body");
-            var fallbackExtracted = ExtractJsonBySessionId(fallbackBody, sessionId);
+            var fallbackExtracted = ExtractJsonBySessionId(fallbackBody, sessionId, isDataArray);
             if (!string.IsNullOrEmpty(fallbackExtracted)) return fallbackExtracted;
             if (!string.IsNullOrEmpty(fallbackBody)) return fallbackBody;
 
@@ -636,7 +641,7 @@ public static class SFCoreWebAIBrowser
     //  RESPONSE EXTRACTION HELPERS
     // ────────────────────────────────────────────────────────
 
-    private static string? ExtractJsonBySessionId(string bodyText, string? sessionId)
+    private static string? ExtractJsonBySessionId(string bodyText, string? sessionId, bool isDataArray)
     {
         if (string.IsNullOrWhiteSpace(bodyText)) return null;
 
@@ -645,15 +650,10 @@ public static class SFCoreWebAIBrowser
         int searchFrom = 0;
         while (true)
         {
-            // Look for JSON that contains Category (from our prompt template)
-            int sidIdx = bodyText.IndexOf("\"Category\"", searchFrom, StringComparison.Ordinal);
-            if (sidIdx < 0)
-            {
-                // Fallback: look for session_id
-                sidIdx = bodyText.IndexOf("\"session_id\"", searchFrom, StringComparison.Ordinal);
-                if (sidIdx < 0) break;
-            }
+            int sidIdx = bodyText.IndexOf("\"session_id\"", searchFrom, StringComparison.Ordinal);
+            if (sidIdx < 0) break;
 
+            // Walk BACKWARD dari sidIdx → cari root '{' pembuka
             int rootOpen = -1;
             int depth = 0;
             for (int i = sidIdx; i >= 0; i--)
@@ -678,13 +678,14 @@ public static class SFCoreWebAIBrowser
 
         if (candidates.Count == 0)
         {
-            Console.WriteLine("[ExtractJson] ⚠️ No JSON with Category/session_id found.");
+            Console.WriteLine("[ExtractJson] ⚠️ No JSON with session_id found.");
             return null;
         }
 
         Console.WriteLine($"[ExtractJson] Found {candidates.Count} JSON candidate(s).");
 
-        var realCandidates = candidates.Where(c => !IsTemplateResponse(c)).ToList();
+        // Filter: bukan template DAN harus match shape data (array vs object)
+        var realCandidates = candidates.Where(c => !IsTemplateResponse(c) && MatchesDataShape(c, isDataArray)).ToList();
         var pool = realCandidates.Count > 0 ? realCandidates : candidates;
 
         if (!string.IsNullOrEmpty(sessionId))
@@ -700,6 +701,31 @@ public static class SFCoreWebAIBrowser
         var last = pool.Last();
         Console.WriteLine($"[ExtractJson] ℹ️ Using last candidate ({last.Length} chars).");
         return last;
+    }
+
+    private static bool MatchesDataShape(string json, bool expectArray)
+    {
+        try
+        {
+            // Cari index "data" : 
+            int dataIdx = json.IndexOf("\"data\"", StringComparison.Ordinal);
+            if (dataIdx < 0) return false;
+
+            // Cari karakter non-whitespace pertama setelah "data":
+            int colonIdx = json.IndexOf(':', dataIdx + 6);
+            if (colonIdx < 0) return false;
+
+            for (int i = colonIdx + 1; i < json.Length; i++)
+            {
+                char c = json[i];
+                if (char.IsWhiteSpace(c)) continue;
+
+                if (expectArray) return c == '[';
+                else return c == '{';
+            }
+            return false;
+        }
+        catch { return false; }
     }
 
     private static bool IsTemplateResponse(string json)

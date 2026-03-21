@@ -1,4 +1,4 @@
-﻿using Api.DataAccess;
+using Api.DataAccess;
 using Api.DataAccess.Extensions;
 using Api.DataAccess.Models.Dms;
 using Api.DataAccess.Models.Masters;
@@ -73,6 +73,7 @@ namespace Api.Repository.Masters
         Task<ResponseCategoryListItem> GetInfoCategoryDocumentAsync(int DocumentId);
         Task<bool> CheckOwnershipAndPrivilegesAsync(int documentId);
         Task<int> PurgeDeletedDocuments(int batchSize, int purgingInMonth);
+        Task<ResponseDocumentDetailsAi> GetDocumentDetailsAiAsync(int documentId);
     }
 
     public class DocumentsRepository(DataContext context, IHttpContextAccessor accessor) : OwnerPrivilegesRepository<Documents>(context, accessor), IDocumentsRepository
@@ -1679,22 +1680,25 @@ namespace Api.Repository.Masters
             // Search filter: multi-source search (Title, Desc, FileContent via FTS, DocumentSummary, AttributeValues)
             if (!string.IsNullOrEmpty(SearchText))
             {
-                var searchPattern = $"%{SearchText}%";
+                var searchPattern = $"%{SearchText.ToLower()}%";
                 baseQuery = baseQuery.Where(x =>
                     // 1. Search di DocumentTitle (ILIKE — case-insensitive, pakai trigram index)
-                    EF.Functions.ILike(x.DocumentTitle, searchPattern) ||
+                    EF.Functions.ILike(x.DocumentTitle.ToLower(), searchPattern) ||
                     // 2. Search di DocumentDesc (ILIKE)
-                    (x.DocumentDesc != null && EF.Functions.ILike(x.DocumentDesc, searchPattern)) ||
+                    (x.DocumentDesc != null && EF.Functions.ILike(x.DocumentDesc.ToLower(), searchPattern)) ||
                     // 3. Search di DocumentFiles.SearchVector (Full-Text Search via GIN index)
                     x.DocumentFiles.Any(f =>
                         f.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", SearchText))) ||
                     // 4. Search di DocumentFiles.DocumentSummary (ILIKE)
                     x.DocumentFiles.Any(f =>
-                        f.DocumentSummary != null && EF.Functions.ILike(f.DocumentSummary, searchPattern)) ||
-                    // 5. Search di DocumentAttributes.AttributeValues (ILIKE)
+                        f.DocumentSummary != null && EF.Functions.ILike(f.DocumentSummary.ToLower(), searchPattern)) ||
+                    // 5. Search di DocumentFiles.DocumentFileContent (ILIKE)
+                    x.DocumentFiles.Any(f =>
+                        f.DocumentFileContent != null && EF.Functions.ILike(f.DocumentFileContent.ToLower(), searchPattern)) ||
+                    // 6. Search di DocumentAttributes.AttributeValues (ILIKE)
                     context.DocumentAttributes.Any(da =>
                         da.DocumentID == x.Id && da.AttributeValues != null &&
-                        EF.Functions.ILike(da.AttributeValues, searchPattern))
+                        EF.Functions.ILike(da.AttributeValues.ToLower(), searchPattern))
                 );
             }
 
@@ -1781,22 +1785,25 @@ namespace Api.Repository.Masters
             // Search filter: multi-source (Title, Desc, FileContent via FTS, DocumentSummary, AttributeValues)
             if (!string.IsNullOrEmpty(DocumentTitle))
             {
-                var searchPattern = $"%{DocumentTitle}%";
+                var searchPattern = $"%{DocumentTitle.ToLower()}%";
                 baseQuery = baseQuery.Where(x =>
                     // 1. Search di DocumentTitle (ILIKE — case-insensitive)
-                    EF.Functions.ILike(x.DocumentTitle, searchPattern) ||
+                    EF.Functions.ILike(x.DocumentTitle.ToLower(), searchPattern) ||
                     // 2. Search di DocumentDesc (ILIKE)
-                    (x.DocumentDesc != null && EF.Functions.ILike(x.DocumentDesc, searchPattern)) ||
+                    (x.DocumentDesc != null && EF.Functions.ILike(x.DocumentDesc.ToLower(), searchPattern)) ||
                     // 3. Search di DocumentFiles.SearchVector (Full-Text Search via GIN index)
                     x.DocumentFiles.Any(f =>
                         f.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", DocumentTitle))) ||
                     // 4. Search di DocumentFiles.DocumentSummary (ILIKE)
                     x.DocumentFiles.Any(f =>
-                        f.DocumentSummary != null && EF.Functions.ILike(f.DocumentSummary, searchPattern)) ||
-                    // 5. Search di DocumentAttributes.AttributeValues (ILIKE)
+                        f.DocumentSummary != null && EF.Functions.ILike(f.DocumentSummary.ToLower(), searchPattern)) ||
+                    // 5. Search di DocumentFiles.DocumentFileContent (ILIKE)
+                    x.DocumentFiles.Any(f =>
+                        f.DocumentFileContent != null && EF.Functions.ILike(f.DocumentFileContent.ToLower(), searchPattern)) ||
+                    // 6. Search di DocumentAttributes.AttributeValues (ILIKE)
                     context.DocumentAttributes.Any(da =>
                         da.DocumentID == x.Id && da.AttributeValues != null &&
-                        EF.Functions.ILike(da.AttributeValues, searchPattern))
+                        EF.Functions.ILike(da.AttributeValues.ToLower(), searchPattern))
                 );
             }
 
@@ -2468,6 +2475,36 @@ namespace Api.Repository.Masters
             }
 
             return list;
+        }
+
+        public async Task<ResponseDocumentDetailsAi> GetDocumentDetailsAiAsync(int documentId)
+        {
+            var doc = await context.Documents.FirstOrDefaultAsync(d => d.Id == documentId);
+            if (doc == null) return null;
+
+            var docFile = await context.DocumentFiles
+                .Where(f => f.DocumentID == documentId && f.IsMainDocumentFile)
+                .FirstOrDefaultAsync();
+
+            var entities = await context.DocumentExtractedEntities
+                .Where(e => e.DocumentId == documentId)
+                .ToListAsync();
+
+            return new ResponseDocumentDetailsAi
+            {
+                DocumentId = doc.Id,
+                Title = doc.DocumentTitle,
+                CategoryName = doc.CategoryName,
+                SubCategoryName = doc.SubCategoryName,
+                DocumentTypeName = doc.DocumentTypeName,
+                DocumentSummary = docFile?.DocumentSummary,
+                FileSize = docFile?.DocumentFileSize ?? 0,
+                Entities = entities.Select(e => new ResponseEntityItem
+                {
+                    AttributeName = e.AttributeName,
+                    Value = e.ValueText ?? e.ValueNumber?.ToString() ?? e.ValueBoolean?.ToString() ?? e.ValueDate?.ToString("yyyy-MM-dd") ?? e.ValueDecimal?.ToString()
+                }).ToList()
+            };
         }
     }
 }

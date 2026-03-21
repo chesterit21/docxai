@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Api.Domain.Attributes;
 using System.ComponentModel;
 using Api.Services.Dms;
@@ -24,6 +24,22 @@ namespace Docubase.api.Controllers.Dms
 		public async Task<IActionResult> search([FromQuery] RequestTopSearch filter)
 		{
 			var result = await service.SearchListDocument(filter);
+			return ResultFactory.Create(result);
+		}
+		
+		[UserAction(UserAction.Read)]
+		[HttpGet("chat-ai-search")]
+		public async Task<IActionResult> ChatAiSearch([FromQuery] RequestTopSearch filter)
+		{
+			var result = await service.SearchListDocument(filter);
+			return ResultFactory.Create(result);
+		}
+
+		[UserAction(UserAction.Read)]
+		[HttpGet("document-details-ai/{id}")]
+		public async Task<IActionResult> GetDocumentDetailsAi(int id)
+		{
+			var result = await service.GetDocumentDetailsAi(id);
 			return ResultFactory.Create(result);
 		}
 

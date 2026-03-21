@@ -10,6 +10,9 @@ namespace Api.DataAccess.Models.Masters
         public Guid Id { get; set; }
 
         [Required]
+        public Guid AttributeId { get; set; }
+
+        [Required]
         [Column(TypeName = "varchar(250)")]
         public string AttributeName { get; set; }
 
@@ -20,5 +23,8 @@ namespace Api.DataAccess.Models.Masters
         [Required]
         [Column(TypeName = "varchar(5)")]
         public string Language { get; set; }
+
+        [ForeignKey(nameof(AttributeId))]
+        public virtual TmDocumentTypeAttributes Attribute { get; set; }
     }
 }

@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import CryptoJS from 'crypto-js';
+import apiClient from './apiClient';
 
 // AI Server Configuration
-const AI_SERVER_URL = 'https://localhost:5000';
+const AI_SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5265';
 const SECURITY_CONFIG = {
     APP_ID: 'DMS-CLIENT-APP-2026',
     API_KEY: 'SHUBA-APP-DMS-RAG',
@@ -12,6 +14,8 @@ const SECURITY_CONFIG = {
 const ENDPOINTS = {
     SESSION_NEW: '/api/chat/session/new',
     CHAT_STREAM: '/api/chat/stream',
+    GET_DOCUMENTS: '/top/chat-ai-search',
+    GET_DOCUMENT_DETAILS_AI: '/top/document-details-ai',
     MODELS: '/v1/models',
     HEALTH: '/health',
     DOCUMENTS: '/api/documents',
@@ -29,14 +33,17 @@ export interface SelectedDocument {
     fileType?: string;
     createdDate?: string;
     originalId?: number;
+    fileSize?: number;
 }
 
 export interface DocumentItem {
-    document_id: number;
-    title: string;
-    owner_user_id: number;
-    permission_level: string;
-    created_at: string;
+    documentId: number;
+    documentName: string;
+    description: string;
+    insertedAt: string;
+    document_id: number; // Keep for backward compatibility if any
+    title: string;       // Keep for backward compatibility
+    created_at: string;  // Keep for backward compatibility
 }
 
 export interface ProcessingDoc {
@@ -151,29 +158,25 @@ const safeApiCall = async <T>(
     }
 };
 
+
+/**
+ * Fetch document details for AI display
+ */
+export const getDocumentDetailsForAi = async (documentId: number) => {
+    const response = await apiClient.get(`${ENDPOINTS.GET_DOCUMENT_DETAILS_AI}/${documentId}`);
+    return response.data?.data;
+};
+
 /**
  * Initialize chat session and fetch documents
  */
-export const initChat = async (userId: number, sessionId?: string | number): Promise<InitResponse> => {
-    return safeApiCall(async () => {
-        const numericSessionId = sessionId ? (typeof sessionId === 'string' ? parseInt(sessionId) : sessionId) : undefined;
-        const headers = await generateHeaders();
-
-        const response = await axios.post<InitResponse>(
-            `${AI_SERVER_URL}${ENDPOINTS.INIT}`,
-            {
-                user_id: userId,
-                session_id: numericSessionId
-            },
-            { headers }
-        );
-
-        if (response.data && response.data.session_id) {
-            return response.data;
-        }
-
-        throw new Error('Failed to initialize session');
-    });
+export const initChat = async (_userId: number, sessionId?: string | number): Promise<InitResponse> => {
+    // Mock the backend init response as it's no longer present
+    return {
+        session_id: sessionId ? (typeof sessionId === 'string' ? parseInt(sessionId) : sessionId) : Math.floor(Math.random() * 1000000),
+        documents: [],
+        processing_docs: []
+    };
 };
 
 /**
@@ -200,16 +203,16 @@ export const streamMessageToAI = async (
     onError: (error: any) => void
 ) => {
     try {
-        const documentIds = selectedDocuments?.map(d => parseInt(d.id)).filter(id => !isNaN(id));
+        const documentIds = selectedDocuments?.map(d => parseInt(d.id)).filter(id => !isNaN(id)) || [];
+        const documentSizes = selectedDocuments?.map(d => d.fileSize || 0) || [];
 
         const headers = await generateHeaders();
         const dataBody = JSON.stringify({
             session_id: parseInt(sessionId),
             user_id: userId,
             message: userMessage,
-            document_ids: documentIds && documentIds.length > 0 ? documentIds : undefined,
-            // Backward compatibility
-            document_id: documentIds && documentIds.length === 1 ? documentIds[0] : undefined,
+            document_ids: documentIds.length > 0 ? documentIds : undefined,
+            document_sizes: documentIds.length > 0 ? documentSizes : undefined
         });
 
         console.log('dataBody :', dataBody);
@@ -264,84 +267,12 @@ export const streamMessageToAI = async (
  * Subscribe to system events via SSE
  */
 export const subscribeToSystemEvents = (
-    sessionId: string | number,
-    onEvent: (event: SystemEvent) => void,
-    onError?: (error: any) => void
+    _sessionId: string | number,
+    _onEvent: (event: SystemEvent) => void,
+    _onError?: (error: any) => void
 ): () => void => {
-    const ctrl = new AbortController();
-
-    const startSubscription = async () => {
-        try {
-            const headers = await generateHeaders();
-            const url = `${AI_SERVER_URL}${ENDPOINTS.EVENTS}?session_id=${sessionId}`;
-
-            await fetchEventSource(url, {
-                method: 'GET',
-                headers: headers,
-                signal: ctrl.signal,
-                async onopen(response) {
-                    if (response.ok) {
-                        return; // everything is good
-                    } else if (response.status === 401) {
-                        // Time sync attempt
-                        const serverDate = response.headers.get('date');
-                        if (serverDate) {
-                            const serverTime = new Date(serverDate).getTime();
-                            const clientTime = Date.now();
-                            serverTimeOffset = serverTime - clientTime;
-                            console.log(`SSE 401: Time skew corrected by ${serverTimeOffset}ms`);
-                        }
-                        // By default, if we throw here or let it fail, it might retry.
-                        // But we want to ensure the next retry uses new headers.
-                        // fetchEventSource doesn't easily let us hot-swap headers mid-retry loop 
-                        // without restarting the call?
-                        // Actually, since startSubscription calls generateHeaders() at the top,
-                        // we need to make sure the RETRY logic calls generateHeaders again.
-                        // The library calls the whole fetch again? No, it uses the options passed.
-                        // The `headers` object is static once passed.
-                        // So we MUST restart the subscription manually or throw a specific error?
-                        // Actually, if we throw, maybe the library doesn't re-run our outer function.
-                    }
-
-                    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-                        // Fatal error (but we might want to retry 401 after sync?)
-                        // For now let's just throw to trigger onerror.
-                        throw new Error(`Failed to connect: ${response.status} ${response.statusText}`);
-                    }
-                },
-                onmessage(msg) {
-                    if (msg.event === 'system_event') {
-                        try {
-                            const data = JSON.parse(msg.data);
-                            onEvent(data);
-                        } catch (err) {
-                            console.error('Failed to parse system event:', err);
-                        }
-                    }
-                },
-                onerror(err) {
-                    if (ctrl.signal.aborted || err.name === 'AbortError') {
-                        return; // Stop if aborted
-                    }
-                    console.error('SSE Error:', err);
-                    // If we updated the offset, we might want to let acceptable errors retry?
-                    // We'll trust the outer loop or user interaction for now.
-                    if (onError) onError(err);
-                }
-            });
-        } catch (err) {
-            if (!ctrl.signal.aborted) {
-                console.error('Failed to start SSE subscription:', err);
-                if (onError) onError(err);
-            }
-        }
-    };
-
-    startSubscription();
-
-    return () => {
-        ctrl.abort();
-    };
+    // Disabled event subscription since C# backend doesn't implement /api/chat/events
+    return () => {};
 };
 
 /**
@@ -427,4 +358,15 @@ export const testAIConnection = async (): Promise<boolean> => {
 
 export const getAvailableModels = async (): Promise<string[]> => {
     return ['rag-default'];
+};
+
+/**
+ * Fetch documents from main .NET backend (TopController)
+ */
+export const getDocumentsFromBackend = async (searchText: string = '', page: number = 1, limit: number = 100): Promise<DocumentListResponse> => {
+    const response = await apiClient.get(`/Top/chat-ai-search?Textsearch=${encodeURIComponent(searchText)}&Page=${page}&Limit=${limit}`);
+    return {
+        documents: response.data?.data?.data || [],
+        total: response.data?.data?.totalRecords || 0
+    };
 };

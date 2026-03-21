@@ -119,6 +119,14 @@ namespace Api.DataAccess
         public DateTime UpdatedAt { get; set; }
     }
 
+    public class BaseEntityAgent : BaseEntity
+    {
+        public int? UpdatedBy { get; set; } = 0;
+
+        [Column(TypeName = "timestamp")]
+        public DateTime UpdatedAt { get; set; }
+    }
+
     public class BaseEntityDefault : BaseEntityUpdate
     {
         public bool IsActive { get; set; } = true;
